@@ -103,7 +103,11 @@ vars.AddVariables(
                 allowed_values=('default', 'mic' )
               ),
 
-  BoolVariable( 'xmlRuntime', 'use a xml-file for runtime parameters', False )
+  BoolVariable( 'xmlRuntime', 'use a xml-file for runtime parameters', False ),
+  
+  EnumVariable( 'block', 'compile with custom implementation for the SWE_Block', 'default',
+                allowed_values=('default', 'dimsplit')
+              )
 )
 
 # external variables
@@ -305,6 +309,10 @@ if env['xmlRuntime'] == True: #TODO
   if 'libxmlDir' in env:
     env.Append(CPPPATH=[env['libxmlDir']+'/include/libxml2'])
     env.Append(LIBPATH=[env['libxmlDir']+'/lib'])
+
+# change implementation of the SWE_Block
+if env['block'] == 'dimsplit':
+  env.Append(CPPDEFINES=['DIMSPLIT'])
 
 #
 # setup the program name and the build directory

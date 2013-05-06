@@ -31,10 +31,14 @@
 #include <string>
 #include <iostream>
 
+#ifdef DIMSPLIT
+#include "blocks/SWE_DimensionalSplitting.hh"
+#else
 #ifndef CUDA
 #include "blocks/SWE_WavePropagationBlock.hh"
 #else
 #include "blocks/cuda/SWE_WavePropagationBlockCuda.hh"
+#endif
 #endif
 
 #ifdef WRITENETCDF
@@ -142,10 +146,14 @@ int main( int argc, char** argv ) {
   l_dY = (l_scenario.getBoundaryPos(BND_TOP) - l_scenario.getBoundaryPos(BND_BOTTOM) )/l_nY;
 
   // create a single wave propagation block
+  #ifdef DIMSPLIT
+  SWE_DimensionalSplitting l_wavePropgationBlock(l_nX, l_nY, l_dX, l_dY);
+  #else
   #ifndef CUDA
   SWE_WavePropagationBlock l_wavePropgationBlock(l_nX,l_nY,l_dX,l_dY);
   #else
   SWE_WavePropagationBlockCuda l_wavePropgationBlock(l_nX,l_nY,l_dX,l_dY);
+  #endif
   #endif
 
   //! origin of the simulation domain in x- and y-direction

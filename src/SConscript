@@ -31,8 +31,10 @@ import sys
 
 Import('env')
 
+if env['block'] == 'dimsplit':
+  sourceFiles = ['blocks/SWE_DimensionalSplitting.cpp']
 # Code without CUDA
-if env['parallelization'] not in ['cuda', 'mpi_with_cuda']:
+elif env['parallelization'] not in ['cuda', 'mpi_with_cuda']:
   if env['solver'] != 'rusanov':
     sourceFiles = ['blocks/SWE_WavePropagationBlock.cpp']
   else:
