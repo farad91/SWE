@@ -16,14 +16,14 @@ SWE_DimensionalSplitting::SWE_DimensionalSplitting(int   l_nx, int   l_ny,
   : SWE_Block(l_nx, l_ny, l_dx, l_dy),
     // initialize the 2-dimensional arrays for the net-updates
     // nx, ny (= l_nx, l_ny): defined in super-class SWE_Block
-    hNetUpdatesLeft  (nx+1, ny),
-    hNetUpdatesRight (nx+1, ny),
-    hNetUpdatesAbove (nx, ny+1),
-    hNetUpdatesBelow (nx, ny+1),
-    huNetUpdatesLeft (nx+1, ny),
-    huNetUpdatesRight(nx+1, ny),
-    hvNetUpdatesAbove(nx, ny+1),
-    hvNetUpdatesBelow(nx, ny+1)
+    hNetUpdatesLeft  (nx+2, ny+2),
+    hNetUpdatesRight (nx+2, ny+2),
+    hNetUpdatesAbove (nx+2, ny+2),
+    hNetUpdatesBelow (nx+2, ny+2),
+    huNetUpdatesLeft (nx+2, ny+2),
+    huNetUpdatesRight(nx+2, ny+2),
+    hvNetUpdatesAbove(nx+2, ny+2),
+    hvNetUpdatesBelow(nx+2, ny+2)
 {
     // initialize the maximum timestep
     // maxTimestep = std::numeric_limits<float>::max();
@@ -37,11 +37,23 @@ SWE_DimensionalSplitting::~SWE_DimensionalSplitting()
 
 void SWE_DimensionalSplitting::simulateTimestep(float dt)
 {
-    // update the net-updates
-    computeNumericalFluxes();
-    // apply the updates
-    updateUnknowns(dt);
+    float maxWaveSpeed = 0.f;
+    float maxEdgeSpeed = 0.f;
+    // execute the f-wave solver: first horizontally
+    maxEdgeSpeed = computeHorizontalFluxes();
+    maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
+    updateHorizontal(dt);
+    // execute the f-wave solver: now vertically
+    maxEdgeSpeed = computeVerticalFluxes();
+    maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
+    updateVertical(dt);
+    // calculate the maximum timestep that can be simulated at once from the maximum wave speed
+    if(maxWaveSpeed > 0.001)
+        maxTimestep = std::min(dx, dy) / maxWaveSpeed;
+    else
+        maxTimestep = std::numeric_limits<float>::max();
     
+    assert(maxTimestep > 0.01);    
     return;
 }
 
@@ -76,43 +88,13 @@ float SWE_DimensionalSplitting::simulate(float tStart, float tEnd)
 void SWE_DimensionalSplitting::computeNumericalFluxes()
 {
     float maxWaveSpeed = 0.f;
-    
+    float maxEdgeSpeed = 0.f;
     // execute the f-wave solver: first horizontally
-    for(int i=1; i<nx+2; i++)
-        for(int j=1; j<ny+1; j++)
-        {
-            float maxEdgeSpeed;
-            
-            fWaveSolver.computeNetUpdates(h[i][j-1],  h[i][j],
-                                          hu[i][j-1], hu[i][j],
-                                          b[i][j-1],  b[i][j],
-                                          hNetUpdatesLeft[i-1][j-1],  hNetUpdatesRight[i-1][j-1],
-                                          huNetUpdatesLeft[i-1][j-1], huNetUpdatesRight[i-1][j-1],
-                                          maxEdgeSpeed );
-            
-            // increase maxWaveSpeed if necessary
-            // this is needed for calculating the maximum timestep
-            maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
-        }
-    
+    maxEdgeSpeed = computeHorizontalFluxes();
+    maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
     // execute the f-wave solver: now vertically
-    for(int i=1; i<nx+1; i++)
-        for(int j=1; j<ny+2; j++)
-        {
-            float maxEdgeSpeed;
-            
-            fWaveSolver.computeNetUpdates(h[i][j-1],  h[i][j],
-                                          hv[i][j-1], hv[i][j],
-                                          b[i][j-1],  b[i][j],
-                                          hNetUpdatesBelow[i-1][j-1],  hNetUpdatesAbove[i-1][j-1],
-                                          hvNetUpdatesBelow[i-1][j-1], hvNetUpdatesAbove[i-1][j-1],
-                                          maxEdgeSpeed );
-            
-            // increase maxWaveSpeed if necessary
-            // - the same as in the loop directly above
-            maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
-        }
-    
+    maxEdgeSpeed = computeVerticalFluxes();
+    maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
     // calculate the maximum timestep that can be simulated at once from the maximum wave speed
     if(maxWaveSpeed > 0.001)
         maxTimestep = std::min(dx, dy) / maxWaveSpeed;
@@ -122,6 +104,52 @@ void SWE_DimensionalSplitting::computeNumericalFluxes()
     assert(maxTimestep >= 0.0);
     return;
 }
+/**
+ * Function to compute the horizontal Fluxes 
+ *
+ * This private function computes the horizontal Fluxes for each Vertical Row including the Ghostcells and returns the maximum Edge speed.
+ *
+ *@return maximum Edge speed 
+ */
+float SWE_DimensionalSplitting::computeHorizontalFluxes(){
+    float edgeSpeed = 0.f;
+    float maxEdgeSpeed = 0.f;
+    for(int y=0; y<ny+2; y++){
+        for(int x=0; x<nx+1; x++){
+            fWaveSolver.computeNetUpdates(h[x][y],  h[x+1][y],
+                                          hv[x][y], hv[x+1][y],
+                                          b[x][y],  b[x+1][y],
+                                          hNetUpdatesLeft[x][y],  hNetUpdatesRight[x][y],
+                                          huNetUpdatesLeft[x][y], huNetUpdatesRight[x][y],
+                                          edgeSpeed);
+            maxEdgeSpeed = std::max(edgeSpeed, maxEdgeSpeed);
+        }
+    }
+    return maxEdgeSpeed;
+}
+/**
+ * Function to compute the vertical Fluxes
+ *
+ * This private function computes the vertical Fluxes for each horizontal Row excluding the Ghostcells and returns the maximum Edge speed.
+ *
+ *@return maximum Edge speed  
+ */
+float SWE_DimensionalSplitting::computeVerticalFluxes(){
+    float edgeSpeed = 0.f;
+    float maxEdgeSpeed = 0.f;
+    for(int x=1; x<nx+1; x++){
+        for(int y=0; y<ny+1; y++){
+            fWaveSolver.computeNetUpdates(h[x][y],  h[x][y+1],
+                                          hv[x][y], hv[x][y+1],
+                                          b[x][y],  b[x][y+1],
+                                          hNetUpdatesBelow[x][y],  hNetUpdatesAbove[x][y],
+                                          hvNetUpdatesBelow[x][y], hvNetUpdatesAbove[x][y],
+                                          edgeSpeed);
+        maxEdgeSpeed = std::max(edgeSpeed, maxEdgeSpeed);
+        }
+    }
+    return maxEdgeSpeed;
+}
 
 /**
  * apply the net-updates calculated with #computeNumericalFluxes
@@ -129,19 +157,31 @@ void SWE_DimensionalSplitting::computeNumericalFluxes()
 void SWE_DimensionalSplitting::updateUnknowns(float dt)
 {
     // apply the net-updates
-    
-    for(int i=1; i<nx+1; i++)
-        for(int j=1; j<ny+1; j++) {
-            // update the height of the water columns
-            h[i][j] -=   dt/dx * (hNetUpdatesRight[i-1][j-1] + hNetUpdatesLeft[i][j-1])
-                       + dt/dy * (hNetUpdatesAbove[i-1][j-1] + hNetUpdatesBelow[i-1][j]);
-            // we cannot handle cells that got dry
-            assert(h[i][j] > 0.0);
-            
-            // update the horizontal (hu) and vertical (hv) momentum
-            hu[i][j] -= dt/dx * (huNetUpdatesRight[i-1][j-1] + huNetUpdatesLeft[i][j-1]);
-            hv[i][j] -= dt/dy * (hvNetUpdatesAbove[i-1][j-1] + hvNetUpdatesBelow[i-1][j]);
-        }
-    
+    updateHorizontal(dt);
+    updateVertical(dt);
     return;
+}
+/**
+ * Updates the cells for the horizontal floating Water
+ */
+void SWE_DimensionalSplitting::updateHorizontal(float dt){
+    for(int y = 0; y<ny+2; y++){
+        for(int x = 1; x<nx+1; y++){
+            h[x][y] -= dt/dx * (hNetUpdatesRight[x-1][y] + hNetUpdatesLeft[x][y]);
+            hu[x][y] -= dt/dx * (huNetUpdatesRight[x-1][y] + huNetUpdatesLeft[x][y]);
+            assert(h[x][y] > 0.0 || b[x][y] > 0.0);
+        }
+    }    
+}
+/**
+ * Updates the cells for the vertical floating Water
+ */
+void SWE_DimensionalSplitting::updateVertical(float dt){
+    for(int x = 1; x<nx+1; x++){
+        for(int y = 1; y<ny+1; y++){
+            h[x][y] -= dt/dy * (hNetUpdatesAbove[x][y-1] + hNetUpdatesBelow[x][y]);
+            hv[x][y] -= dt/dy * (hvNetUpdatesAbove[x][y-1] + hvNetUpdatesBelow[x][y]);
+            //assert(h[x][y] > 0.0 || b[x][y] > 0.0);
+        }
+    }    
 }
