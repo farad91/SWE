@@ -1,0 +1,47 @@
+#!/usr/bin/python
+
+
+"""
+# vanilla include (the 'cxxtest' would be 'CxxTest' if the file was called CxxTest.py!)
+env = Environment(tools = ['default', 'cxxtest'])
+
+# or you can use this syntax:
+# env = Environment(tools = ['default','cxxtest'], CXXTEST='#/path/to/cxxtestgen.py')
+
+# if you don't want to have an extra scons_site directory
+# env = Environment(toolpath=['cxxtest/build_tools/SCons'], tools = ['default','cxxtest'])
+
+# env.CxxTest('test_dimsplit', source = 'DimensionalSplittingTest.t.h')
+
+# collect all the necessary source files
+ut_file = 'DimensionalSplittingTest.t.h'
+blocks  = [ 'SWE_Block.cpp', 'SWE_DimensionSplitting.cpp' ]
+
+src_files = [ ut_file ]
+src_files.extend(blocks)
+
+env.CxxTest('test_dimsplit', src_files) # utility functions test
+# env.CxxTest('test_timer', ['Timer.t.h'])                       # timer class test
+
+# generate the source for multile files and then call the runner (--root/--part functionality)
+# env.CxxTest('test_multi', ['TestSuite1.t.h', 'TestSuite2.t.h', 'test_utility_functions.cpp'], CXXFLAGS='-Wall -W -Wextra')
+"""
+
+import os.path as path
+import imp
+
+cxxtest_path = '../../../cxxtest/'
+cxxtestbuilder_path = path.join(cxxtest_path, 'build_tools/SCons/cxxtest.py')
+
+cxxtest = imp.load_source('cxxtest', cxxtestbuilder_path)
+
+env = Environment()
+
+cxxtest.generate(env, CXXTEST_INSTALL_DIR = cxxtest_path)
+
+blocks = 'blocks/*.cpp'
+
+env.CxxTest('test_dimsplit', ['DimensionalSplittingTest.t.h', blocks], CPPPATH='..')
+
+# env.CxxTest('test_field', ['test_field.h', '../src/sphere-index.o', '../src/sphere-geoind.o', '../src/sphere-type.o', '../src/sphere-field.o'])
+
