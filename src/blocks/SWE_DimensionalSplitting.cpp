@@ -48,10 +48,10 @@ void SWE_DimensionalSplitting::simulateTimestep(float dt)
     maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
     updateVertical(dt);
     // calculate the maximum timestep that can be simulated at once from the maximum wave speed
-    if(maxWaveSpeed > 0.001)
+    //if(maxWaveSpeed > 0.0000000000001)
         maxTimestep = std::min(dx, dy) / maxWaveSpeed;
-    else
-        maxTimestep = std::numeric_limits<float>::max();
+    //else
+      //  maxTimestep = std::numeric_limits<float>::max();
     
     assert(maxTimestep > 0.01);    
     return;
@@ -69,10 +69,10 @@ float SWE_DimensionalSplitting::simulate(float tStart, float tEnd)
         
         // simulate a timestep with dynamic length
         // (depends on the maximum wave speed)
-        computeNumericalFluxes();
-        
         dt = maxTimestep;
-        updateUnknowns(dt);
+        simulateTimestep(dt);
+        //computeNumericalFluxes();
+        //updateUnknowns(dt);
         
         // update the time
         time += dt;
@@ -92,16 +92,19 @@ void SWE_DimensionalSplitting::computeNumericalFluxes()
     // execute the f-wave solver: first horizontally
     maxEdgeSpeed = computeHorizontalFluxes();
     maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
+        if(maxWaveSpeed > 0.001)
+        maxTimestep = std::min(dx, dy) / maxWaveSpeed;
+    else
+        maxTimestep = std::numeric_limits<float>::max();
+    assert(maxTimestep >= 0.0);
+    updateHorizontal(maxTimestep);
     // execute the f-wave solver: now vertically
     maxEdgeSpeed = computeVerticalFluxes();
     maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
     // calculate the maximum timestep that can be simulated at once from the maximum wave speed
-    if(maxWaveSpeed > 0.001)
-        maxTimestep = std::min(dx, dy) / maxWaveSpeed;
-    else
-        maxTimestep = std::numeric_limits<float>::max();
+
     
-    assert(maxTimestep >= 0.0);
+
     return;
 }
 /**
@@ -117,7 +120,7 @@ float SWE_DimensionalSplitting::computeHorizontalFluxes(){
     for(int y=0; y<ny+2; y++){
         for(int x=0; x<nx+1; x++){
             fWaveSolver.computeNetUpdates(h[x][y],  h[x+1][y],
-                                          hv[x][y], hv[x+1][y],
+                                          hu[x][y], hu[x+1][y],
                                           b[x][y],  b[x+1][y],
                                           hNetUpdatesLeft[x][y],  hNetUpdatesRight[x][y],
                                           huNetUpdatesLeft[x][y], huNetUpdatesRight[x][y],
@@ -137,7 +140,7 @@ float SWE_DimensionalSplitting::computeHorizontalFluxes(){
 float SWE_DimensionalSplitting::computeVerticalFluxes(){
     float edgeSpeed = 0.f;
     float maxEdgeSpeed = 0.f;
-    for(int x=1; x<nx+1; x++){
+    for(int x=0; x<nx+2; x++){
         for(int y=0; y<ny+1; y++){
             fWaveSolver.computeNetUpdates(h[x][y],  h[x][y+1],
                                           hv[x][y], hv[x][y+1],
@@ -145,7 +148,7 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(){
                                           hNetUpdatesBelow[x][y],  hNetUpdatesAbove[x][y],
                                           hvNetUpdatesBelow[x][y], hvNetUpdatesAbove[x][y],
                                           edgeSpeed);
-        maxEdgeSpeed = std::max(edgeSpeed, maxEdgeSpeed);
+            maxEdgeSpeed = std::max(edgeSpeed, maxEdgeSpeed);
         }
     }
     return maxEdgeSpeed;
@@ -157,7 +160,7 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(){
 void SWE_DimensionalSplitting::updateUnknowns(float dt)
 {
     // apply the net-updates
-    updateHorizontal(dt);
+    //updateHorizontal(dt);
     updateVertical(dt);
     return;
 }
@@ -166,7 +169,7 @@ void SWE_DimensionalSplitting::updateUnknowns(float dt)
  */
 void SWE_DimensionalSplitting::updateHorizontal(float dt){
     for(int y = 0; y<ny+2; y++){
-        for(int x = 1; x<nx+1; y++){
+        for(int x = 1; x<nx+1; x++){
             h[x][y] -= dt/dx * (hNetUpdatesRight[x-1][y] + hNetUpdatesLeft[x][y]);
             hu[x][y] -= dt/dx * (huNetUpdatesRight[x-1][y] + huNetUpdatesLeft[x][y]);
             assert(h[x][y] > 0.0 || b[x][y] > 0.0);
@@ -181,7 +184,7 @@ void SWE_DimensionalSplitting::updateVertical(float dt){
         for(int y = 1; y<ny+1; y++){
             h[x][y] -= dt/dy * (hNetUpdatesAbove[x][y-1] + hNetUpdatesBelow[x][y]);
             hv[x][y] -= dt/dy * (hvNetUpdatesAbove[x][y-1] + hvNetUpdatesBelow[x][y]);
-            //assert(h[x][y] > 0.0 || b[x][y] > 0.0);
+            assert(h[x][y] > 0.0 || b[x][y] > 0.0);
         }
     }    
 }
