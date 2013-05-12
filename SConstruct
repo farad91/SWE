@@ -115,7 +115,7 @@ vars.AddVariables(
                 allowed_values=('default', 'PartialDamBreak')              
               ),
   
-  EnumVariable( 'methode', 'compile with runTimestep (better performance with block=dimsplit)(block=dimsplit required)', 'default',
+  EnumVariable( 'method', 'compile with runTimestep (better performance in combination with block=dimsplit) (block=dimsplit required)', 'default',
                 allowed_values=('default', 'runTimestep')              
               )
 )
@@ -322,15 +322,15 @@ if env['xmlRuntime'] == True: #TODO
 
 # change implementation of the SWE_Block
 if env['block'] == 'dimsplit':
+  # change simulate methode  
+  if env['method'] == 'runTimestep':
+    env.Append(CPPDEFINES=['RUNTIMESTEP'])
+  
   env.Append(CPPDEFINES=['DIMSPLIT'])
 
 # change simple scenario  
 if env['scenario'] == 'PartialDamBreak':
   env.Append(CPPDEFINES=['PARTIALDAMBREAK'])
-
-# change simulate methode  
-if env['methode'] == 'runTimestep':
-  env.Append(CPPDEFINES=['RUNTIMESTEP'])
 
 #
 # setup the program name and the build directory
