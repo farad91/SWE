@@ -107,6 +107,10 @@ vars.AddVariables(
   
   EnumVariable( 'block', 'compile with custom implementation for the SWE_Block', 'default',
                 allowed_values=('default', 'dimsplit')
+                ),
+  
+  EnumVariable( 'scenario', 'compile with coustum Scenario', 'default',
+                allowed_values=('default', 'PartialDamBreak')              
               )
 )
 
@@ -313,6 +317,10 @@ if env['xmlRuntime'] == True: #TODO
 # change implementation of the SWE_Block
 if env['block'] == 'dimsplit':
   env.Append(CPPDEFINES=['DIMSPLIT'])
+
+# changesimple scenario  
+if env['scenario'] == 'PartialDamBreak':
+  env.Append(CPPDEFINES=['PARTIALDAMBREAK'])
 
 #
 # setup the program name and the build directory

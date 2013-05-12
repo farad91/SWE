@@ -132,7 +132,11 @@ int main( int argc, char** argv ) {
                                 (float) 28800., simulationArea);
   #else
   // create a simple artificial scenario
+  #ifdef PARTIALDAMBREAK
   SWE_DamBreakScenario l_scenario;
+  #else
+  SWE_RadialDamBreakScenario l_scenario;
+  #endif
   #endif
 
   //! number of checkpoints for visualization (at each checkpoint in time, an output file is written).
