@@ -109,7 +109,7 @@ vars.AddVariables(
                 allowed_values=('default', 'dimsplit')
                 ),
   
-  EnumVariable( 'scenario', 'compile with coustum Scenario', 'default',
+  EnumVariable( 'scenario', 'compile with custom Scenario', 'default',
                 allowed_values=('default', 'PartialDamBreak')              
               )
 )
