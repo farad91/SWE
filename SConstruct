@@ -102,6 +102,8 @@ vars.AddVariables(
   EnumVariable( 'platform', 'compile for a specific platform (Intel compiler only)', 'default',
                 allowed_values=('default', 'mic' )
               ),
+              
+  BoolVariable( 'SWE_dimsplit', 'use SWE_dimsplit', False ),
 
   BoolVariable( 'xmlRuntime', 'use a xml-file for runtime parameters', False ),
   
