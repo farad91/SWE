@@ -1,5 +1,6 @@
 /**
  * @author Raphael Dümig <duemig@in.tum.de>
+ * @author Thomas Blocher <blocher@in.tum.de>
  */
 
 #include "blocks/SWE_DimensionalSplitting.hh"
@@ -93,7 +94,7 @@ void SWE_DimensionalSplitting::computeNumericalFluxes()
     maxEdgeSpeed = computeHorizontalFluxes();
     maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
         if(maxWaveSpeed > 0.001)
-        maxTimestep = std::min(dx, dy) / maxWaveSpeed;
+        maxTimestep = 0.4f * std::min(dx, dy) / maxWaveSpeed;
     else
         maxTimestep = std::numeric_limits<float>::max();
     assert(maxTimestep >= 0.0);
@@ -101,6 +102,7 @@ void SWE_DimensionalSplitting::computeNumericalFluxes()
     // execute the f-wave solver: now vertically
     maxEdgeSpeed = computeVerticalFluxes();
     maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
+    assert(maxTimestep < std::min(dx, dy) / maxWaveSpeed);
     // calculate the maximum timestep that can be simulated at once from the maximum wave speed
 
     

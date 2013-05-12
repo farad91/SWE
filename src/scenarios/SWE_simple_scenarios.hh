@@ -207,17 +207,17 @@ class SWE_DamBreakScenario : public SWE_Scenario {
   public:
 
     float getBathymetry(float x, float y) {
-       if(x < 100.5f && x >= 95.5f && (y <= 95.f || y>= 170.f))
+       if(x <= 102.5f && x >= 97.5f && (y <= 95.f || y>= 170.f))
         return 0.f;
        else
        return -10.f;
     };
 
     float getWaterHeight(float x, float y) {
-        if(x > 100)
-            return (10.f);
+        if(x < 97.5f)
+            return (5.f);
         else 
-            return (5.f); 
+            return (10.f); 
     };
 
 	virtual float endSimulation() { return (float) 15; };
