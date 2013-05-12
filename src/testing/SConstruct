@@ -39,9 +39,13 @@ env = Environment()
 
 cxxtest.generate(env, CXXTEST_INSTALL_DIR = cxxtest_path)
 
-blocks = 'blocks/*.cpp'
+src_files = []
+blocks = [ '../blocks/SWE_DimensionalSplitting.cpp', '../blocks/SWE_Block.cpp' ]
+swe1d  = [ 'SWE1D/WavePropagation.cpp' ]
+src_files.extend(blocks)
+src_files.extend(swe1d)
 
-env.CxxTest('test_dimsplit', ['DimensionalSplittingTest.t.h', blocks], CPPPATH='..')
+env.CxxTest('test_dimsplit', ['DimensionalSplittingTest.t.h', src_files], CPPPATH='..')
 
 # env.CxxTest('test_field', ['test_field.h', '../src/sphere-index.o', '../src/sphere-geoind.o', '../src/sphere-type.o', '../src/sphere-field.o'])
 

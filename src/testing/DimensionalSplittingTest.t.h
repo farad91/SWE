@@ -10,16 +10,17 @@
 
 class DimensionalSplittingTest : public CxxTest::TestSuite {
 public:
+    static const int row  = 0;
+    static const float dt = 0.01;
+    static const float accuracy = 1.0E-6;
+    
+    static const int nx = 200;
+    static const int ny = 1;
+    static const float dx = 1.f;
+    static const float dy = 1.f;
+    
+    
     void testCompareNetUpdates() {
-        const int row  = 0;
-        const float dt = 0.01;
-        const float accuracy = 1.0E-6;
-        
-        const int nx = 200;
-        const int ny = 1;
-        const float dx = 1.f;
-        const float dy = 1.f;
-        
         SWE_DimensionalSplitting dimsplit_solver(nx, ny, dx, dy);
         
         SWE_TestingScenario testingScenario;
@@ -54,7 +55,7 @@ public:
 	    Float1D momentums = dimsplit_momentum.getRowProxy(row);
 	    
 	    // compare the results
-	    for(int i=0; i<h_size; i++) {
+	    for(int i=0; i<nx; i++) {
 	        TS_ASSERT_DELTA(heights[i], h[i], accuracy);
 	        TS_ASSERT_DELTA(momentums[i], hu[i], accuracy);
 	    }
@@ -63,8 +64,8 @@ public:
     void testHorizontalSteadyState() {
         SWE_DimensionalSplitting dimsplit_solver(nx, ny, dx, dy);
         
-        SteadyScenario steadyScenario;
-        dimsplit_solver.initScenario(0.f, 0.f, steadyScenario);
+        SWE_TestingScenario testingScenario;
+        dimsplit_solver.initScenario(0.f, 0.f, testingScenario);
 
         // calculate one timestep with the dimsplit solver
 	    dimsplit_solver.computeNumericalFluxes();
@@ -79,7 +80,7 @@ public:
 	    Float1D momentums = dimsplit_momentum.getRowProxy(row);
 	    
 	    // compare the results
-	    for(int i=0; i<h_size; i++) {
+	    for(int i=0; i<nx; i++) {
 	        TS_ASSERT_DELTA(heights[i], 0.f, accuracy);
 	        TS_ASSERT_DELTA(momentums[i], 0.f, accuracy);
 	    }

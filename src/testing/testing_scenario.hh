@@ -2,9 +2,7 @@
  * @file
  * This file is part of SWE.
  *
- * @author Michael Bader, Kaveh Rahnema, Tobias Schnabel
- * @author Sebastian Rettenberger (rettenbs AT in.tum.de, http://www5.in.tum.de/wiki/index.php/Sebastian_Rettenberger,_M.Sc.)
- *
+ * @author Raphael Dümig <duemig@in.tum.de>
  * @section LICENSE
  *
  * SWE is free software: you can redistribute it and/or modify
@@ -46,7 +44,12 @@ class SWE_TestingScenario : public SWE_Scenario {
 
 	virtual float endSimulation() { return (float) 15; };
 
-    virtual BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW; };
+    virtual BoundaryType getBoundaryType(BoundaryEdge edge) {
+        if(edge == BND_LEFT || edge == BND_RIGHT)
+            return OUTFLOW;
+        else
+            return WALL;
+    };
 
     /** Get the boundary positions
      *
@@ -57,11 +60,11 @@ class SWE_TestingScenario : public SWE_Scenario {
        if ( i_edge == BND_LEFT )
          return (float)0;
        else if ( i_edge == BND_RIGHT)
-         return (float)1000;
+         return (float)199;
        else if ( i_edge == BND_BOTTOM )
          return (float)0;
        else
-         return (float)1000;
+         return (float)1;
     };
 };
 
