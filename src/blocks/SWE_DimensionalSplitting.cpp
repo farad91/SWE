@@ -35,7 +35,8 @@ SWE_DimensionalSplitting::~SWE_DimensionalSplitting()
 {
 }
 
-
+ /*Simulates a timestep of dt and doesn't check if this time is out of the conditones
+ */
 void SWE_DimensionalSplitting::simulateTimestep(float dt)
 {
     float maxWaveSpeed = 0.f;
@@ -50,14 +51,14 @@ void SWE_DimensionalSplitting::simulateTimestep(float dt)
     updateVertical(dt);
     // calculate the maximum timestep that can be simulated at once from the maximum wave speed
     //if(maxWaveSpeed > 0.0000000000001)
-        maxTimestep = std::min(dx, dy) / maxWaveSpeed;
-    //else
-      //  maxTimestep = std::numeric_limits<float>::max();
+    maxTimestep = std::min(dx, dy) / maxWaveSpeed;
+
     
     assert(maxTimestep > 0.01);    
     return;
 }
-
+ /** This funktion calculates and applays all changes for one Timestep 
+ */
 void SWE_DimensionalSplitting::runTimestep()
 {
     float maxWaveSpeed = 0.f;
@@ -65,36 +66,32 @@ void SWE_DimensionalSplitting::runTimestep()
     // execute the f-wave solver: first horizontally
     maxEdgeSpeed = computeHorizontalFluxes();
     maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
-    if(maxWaveSpeed > 0.001)
-        maxTimestep = 0.4f * std::min(dx, dy) / maxWaveSpeed;
-    else
-        maxTimestep = std::numeric_limits<float>::max();
+    maxTimestep = 0.4f * std::min(dx, dy) / maxWaveSpeed;
     updateHorizontal(maxTimestep);
     // execute the f-wave solver: now vertically
     maxEdgeSpeed = computeVerticalFluxes();
     maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
     updateVertical(maxTimestep);
-    assert(maxTimestep > 0.01);    
+    assert(maxTimestep > 0.0001);
+    // assert just controlls y because it just can take y updates with invalide values
+    assert(maxTimestep <= 0.5f * dy / maxWaveSpeed);    
     return;
 }
+    /**This methode runs a simulation for the time intervall from tStart to tEnd 
+    */
 
 float SWE_DimensionalSplitting::simulate(float tStart, float tEnd)
 {
     float time = tStart;
     float dt;
     
-    while(time < tEnd) {
-        // get the ghost cells content from another block
-        setGhostLayer();
-        
+    while(time < tEnd) {        
         // simulate a timestep with dynamic length
         // (depends on the maximum wave speed)
-        dt = maxTimestep;
-        computeNumericalFluxes();
-        updateUnknowns(dt);
+        runTimestep();
         
         // update the time
-        time += dt;
+        time += maxTimestep;
     }
     
     return time;
@@ -153,7 +150,7 @@ float SWE_DimensionalSplitting::computeHorizontalFluxes(){
     return maxEdgeSpeed;
 }
 /**
- * Function to compute the vertical Fluxes
+ * Function to compute the vertical Fluxes in dependency of the results form @computeHorizontalFluxes 
  *
  * This private function computes the vertical Fluxes for each horizontal Row excluding the Ghostcells and returns the maximum Edge speed.
  *
@@ -176,7 +173,13 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
     }
     return maxEdgeSpeed;
 }
-
+/**
+ * Function to compute the vertical Fluxes 
+ *
+ * This private function computes the vertical Fluxes for each horizontal Row excluding the Ghostcells and returns the maximum Edge speed.
+ *
+ *@return maximum Edge speed  
+ */
 float SWE_DimensionalSplitting::computeVerticalFluxes(){
     float edgeSpeed = 0.f;
     float maxEdgeSpeed = 0.f;
