@@ -5,10 +5,16 @@ documentation/doxy/
 
 *.pyc
 .sconsign.dblite
-*~
 *.vts
 
 .settings
 .project
 .cproject
 .pydevproject
+
+*~
+*.o
+
+src/testing/*.cpp
+src/testing/test_*
+
