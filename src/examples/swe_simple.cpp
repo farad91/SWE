@@ -244,7 +244,10 @@ int main( int argc, char** argv ) {
       // TODO: This calculation should be replaced by the usage of the wave speeds occuring during the flux computation
       // Remark: The code is executed on the CPU, therefore a "valid result" depends on the CPU-GPU-synchronization.
 //      l_wavePropgationBlock.computeMaxTimestep();
-
+      #ifdef RUNTIMESTEP
+      l_wavePropgationBlock.runTimestep();
+      float l_maxTimeStepWidth = l_wavePropgationBlock.getMaxTimestep();
+      #else  
       // compute numerical flux on each edge
       l_wavePropgationBlock.computeNumericalFluxes();
 
@@ -253,7 +256,7 @@ int main( int argc, char** argv ) {
 
       // update the cell values
       l_wavePropgationBlock.updateUnknowns(l_maxTimeStepWidth);
-
+      #endif
       // update the cpu time in the logger
       tools::Logger::logger.updateCpuTime();
 

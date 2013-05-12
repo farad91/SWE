@@ -217,7 +217,7 @@ class SWE_DamBreakScenario : public SWE_Scenario {
         if(x < 97.5f)
             return (5.f);
         else 
-            return (10.f); 
+            return (20.f); 
     };
 
 	virtual float endSimulation() { return (float) 15; };
