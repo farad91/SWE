@@ -31,31 +31,14 @@
 #include <string>
 #include <iostream>
 
-#ifdef DIMSPLIT
 #include "blocks/SWE_DimensionalSplitting.hh"
-#else
-#ifndef CUDA
-#include "blocks/SWE_WavePropagationBlock.hh"
-#else
-#include "blocks/cuda/SWE_WavePropagationBlockCuda.hh"
-#endif
-#endif
 
-#ifdef WRITENETCDF
-#include "writer/NetCdfWriter.hh"
-#else
+
 #include "writer/VtkWriter.hh"
-#endif
 
-#ifdef ASAGI
-#include "scenarios/SWE_AsagiScenario.hh"
-#else
+
 #include "scenarios/SWE_simple_scenarios.hh"
-#endif
 
-#ifdef READXML
-#include "tools/CXMLConfig.hpp"
-#endif
 
 #include "tools/help.hh"
 #include "tools/Logger.hh"
@@ -69,14 +52,12 @@ int main( int argc, char** argv ) {
    * Initialization.
    */
   // check if the necessary command line input parameters are given
-  #ifndef READXML
   if(argc != 4) {
     std::cout << "Aborting ... please provide proper input parameters." << std::endl
               << "Example: ./SWE_parallel 200 300 /work/openmp_out" << std::endl
               << "\tfor a single block of size 200 * 300" << std::endl;
     return 1;
   }
-  #endif
 
   //! number of grid cells in x- and y-direction.
   int l_nX, l_nY;
@@ -85,58 +66,16 @@ int main( int argc, char** argv ) {
   std::string l_baseName;
 
   // read command line parameters
-  #ifndef READXML
   l_nY = l_nX = atoi(argv[1]);
   l_nY = atoi(argv[2]);
   l_baseName = std::string(argv[3]);
-  #endif
 
-  // read xml file
-  #ifdef READXML
-  assert(false); //TODO: not implemented.
-  if(argc != 2) {
-    s_sweLogger.printString("Aborting. Please provide a proper input file.");
-    s_sweLogger.printString("Example: ./SWE_gnu_debug_none_augrie config.xml");
-    return 1;
-  }
-  s_sweLogger.printString("Reading xml-file.");
 
-  std::string l_xmlFile = std::string(argv[1]);
-  s_sweLogger.printString(l_xmlFile);
-
-  CXMLConfig l_xmlConfig;
-  l_xmlConfig.loadConfig(l_xmlFile.c_str());
-  #endif
-
-  #ifdef ASAGI
-  /* Information about the example bathymetry grid (tohoku_gebco_ucsb3_500m_hawaii_bath.nc):
-   *
-   * Pixel node registration used [Cartesian grid]
-   * Grid file format: nf = GMT netCDF format (float)  (COARDS-compliant)
-   * x_min: -500000 x_max: 6500000 x_inc: 500 name: x nx: 14000
-   * y_min: -2500000 y_max: 1500000 y_inc: 500 name: y ny: 8000
-   * z_min: -6.48760175705 z_max: 16.1780223846 name: z
-   * scale_factor: 1 add_offset: 0
-   * mean: 0.00217145586762 stdev: 0.245563641735 rms: 0.245573241263
-   */
-
-  //simulation area
-  float simulationArea[4];
-  simulationArea[0] = -450000;
-  simulationArea[1] = 6450000;
-  simulationArea[2] = -2450000;
-  simulationArea[3] = 1450000;
-
-  SWE_AsagiScenario l_scenario( ASAGI_INPUT_DIR "tohoku_gebco_ucsb3_500m_hawaii_bath.nc",
-                                ASAGI_INPUT_DIR "tohoku_gebco_ucsb3_500m_hawaii_displ.nc",
-                                (float) 28800., simulationArea);
-  #else
   // create a simple artificial scenario
   #ifdef PARTIALDAMBREAK
   SWE_DamBreakScenario l_scenario;
   #else
   SWE_RadialDamBreakScenario l_scenario;
-  #endif
   #endif
 
   //! number of checkpoints for visualization (at each checkpoint in time, an output file is written).
@@ -150,15 +89,7 @@ int main( int argc, char** argv ) {
   l_dY = (l_scenario.getBoundaryPos(BND_TOP) - l_scenario.getBoundaryPos(BND_BOTTOM) )/l_nY;
 
   // create a single wave propagation block
-  #ifdef DIMSPLIT
   SWE_DimensionalSplitting l_wavePropgationBlock(l_nX, l_nY, l_dX, l_dY);
-  #else
-  #ifndef CUDA
-  SWE_WavePropagationBlock l_wavePropgationBlock(l_nX,l_nY,l_dX,l_dY);
-  #else
-  SWE_WavePropagationBlockCuda l_wavePropgationBlock(l_nX,l_nY,l_dX,l_dY);
-  #endif
-  #endif
 
   //! origin of the simulation domain in x- and y-direction
   float l_originX, l_originY;
@@ -192,22 +123,13 @@ int main( int argc, char** argv ) {
   std::string l_fileName = generateBaseFileName(l_baseName,0,0);
   //boundary size of the ghost layers
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
-#ifdef WRITENETCDF
-  //construct a NetCdfWriter
-  io::NetCdfWriter l_writer( l_fileName,
-		  l_wavePropgationBlock.getBathymetry(),
-		  l_boundarySize,
-		  l_nX, l_nY,
-		  l_dX, l_dY,
-		  l_originX, l_originY);
-#else
+
   // consturct a VtkWriter
   io::VtkWriter l_writer( l_fileName,
 		  l_wavePropgationBlock.getBathymetry(),
 		  l_boundarySize,
 		  l_nX, l_nY,
 		  l_dX, l_dY );
-#endif
   // Write zero time step
   l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                           l_wavePropgationBlock.getDischarge_hu(),
@@ -244,19 +166,8 @@ int main( int argc, char** argv ) {
       // TODO: This calculation should be replaced by the usage of the wave speeds occuring during the flux computation
       // Remark: The code is executed on the CPU, therefore a "valid result" depends on the CPU-GPU-synchronization.
 //      l_wavePropgationBlock.computeMaxTimestep();
-      #ifdef RUNTIMESTEP
       l_wavePropgationBlock.runTimestep();
       float l_maxTimeStepWidth = l_wavePropgationBlock.getMaxTimestep();
-      #else  
-      // compute numerical flux on each edge
-      l_wavePropgationBlock.computeNumericalFluxes();
-
-      //! maximum allowed time step width.
-      float l_maxTimeStepWidth = l_wavePropgationBlock.getMaxTimestep();
-
-      // update the cell values
-      l_wavePropgationBlock.updateUnknowns(l_maxTimeStepWidth);
-      #endif
       // update the cpu time in the logger
       tools::Logger::logger.updateCpuTime();
 

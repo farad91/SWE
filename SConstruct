@@ -102,6 +102,8 @@ vars.AddVariables(
   EnumVariable( 'platform', 'compile for a specific platform (Intel compiler only)', 'default',
                 allowed_values=('default', 'mic' )
               ),
+              
+  BoolVariable( 'SWE_dimsplit', 'use SWE_dimsplit', False ),
 
   BoolVariable( 'xmlRuntime', 'use a xml-file for runtime parameters', False ),
   
@@ -111,6 +113,10 @@ vars.AddVariables(
   
   EnumVariable( 'scenario', 'compile with custom Scenario', 'default',
                 allowed_values=('default', 'PartialDamBreak')              
+              ),
+  
+  EnumVariable( 'methode', 'compile with runTimestep (better performance with block=dimsplit)(block=dimsplit required)', 'default',
+                allowed_values=('default', 'runTimestep')              
               )
 )
 
@@ -318,9 +324,13 @@ if env['xmlRuntime'] == True: #TODO
 if env['block'] == 'dimsplit':
   env.Append(CPPDEFINES=['DIMSPLIT'])
 
-# changesimple scenario  
+# change simple scenario  
 if env['scenario'] == 'PartialDamBreak':
   env.Append(CPPDEFINES=['PARTIALDAMBREAK'])
+
+# change simulate methode  
+if env['methode'] == 'runTimestep':
+  env.Append(CPPDEFINES=['RUNTIMESTEP'])
 
 #
 # setup the program name and the build directory

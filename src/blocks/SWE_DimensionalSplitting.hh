@@ -24,9 +24,11 @@ private:
     Float2D huNetUpdatesRight;
     Float2D hvNetUpdatesAbove;
     Float2D hvNetUpdatesBelow;
+
     
     void updateVertical(float dt);
     void updateHorizontal(float dt);
+    float computeVerticalFluxes(float dt);
     float computeVerticalFluxes();
     float computeHorizontalFluxes();
 public:
@@ -39,6 +41,7 @@ public:
     float simulate(float tStart, float tEnd);
     void computeNumericalFluxes();
     void updateUnknowns(float dt);
+    void runTimestep();
     
 };
 
