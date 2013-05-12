@@ -199,5 +199,49 @@ class SWE_SplashingConeScenario : public SWE_Scenario {
 
     virtual BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW; };
 };
+/* Dambreak Scenario from the worksheet 2 exersice 4
+ *
+ */
+class SWE_DamBreakScenario : public SWE_Scenario {
 
+  public:
+
+    float getBathymetry(float x, float y) {
+       if(x < 100.5f && x >= 95.5f && (y <= 95.f || y>= 170.f))
+        return 0.f;
+       else
+       return -250.f;
+    };
+
+    float getWaterHeight(float x, float y) {
+        if(x > 100)
+            return (15.f);
+        else 
+            return (5.f); 
+    };
+
+	virtual float endSimulation() { return (float) 20; };
+
+    virtual BoundaryType getBoundaryType(BoundaryEdge edge) { 
+    if ( edge == BND_RIGHT) 
+        return OUTFLOW;  
+    else return WALL;
+    };
+
+    /** Get the boundary positions
+     *
+     * @param i_edge which edge
+     * @return value in the corresponding dimension
+     */
+    float getBoundaryPos(BoundaryEdge i_edge) {
+       if ( i_edge == BND_LEFT )
+         return (float)0;
+       else if ( i_edge == BND_RIGHT)
+         return (float)400;
+       else if ( i_edge == BND_BOTTOM )
+         return (float)0;
+       else
+         return (float)200;
+    };
+};
 #endif

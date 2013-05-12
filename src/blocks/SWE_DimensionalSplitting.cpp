@@ -140,7 +140,7 @@ float SWE_DimensionalSplitting::computeHorizontalFluxes(){
 float SWE_DimensionalSplitting::computeVerticalFluxes(){
     float edgeSpeed = 0.f;
     float maxEdgeSpeed = 0.f;
-    for(int x=0; x<nx+2; x++){
+    for(int x=1; x<nx+1; x++){
         for(int y=0; y<ny+1; y++){
             fWaveSolver.computeNetUpdates(h[x][y],  h[x][y+1],
                                           hv[x][y], hv[x][y+1],
@@ -160,7 +160,7 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(){
 void SWE_DimensionalSplitting::updateUnknowns(float dt)
 {
     // apply the net-updates
-    //updateHorizontal(dt);
+    // updateHorizontal(dt);
     updateVertical(dt);
     return;
 }
