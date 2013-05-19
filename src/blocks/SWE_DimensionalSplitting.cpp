@@ -119,7 +119,7 @@ void SWE_DimensionalSplitting::computeNumericalFluxes()
         maxTimestep = std::numeric_limits<float>::max();
     maxEdgeSpeed = computeVerticalFluxes(maxTimestep);
     assert(maxTimestep >= 0.0);
-    assert(maxTimestep <= 0.8f * std::min(dx, dy) / maxEdgeSpeed);
+    assert(maxTimestep <= 0.5f * dy / maxEdgeSpeed);
     
 
     

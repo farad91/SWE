@@ -6,6 +6,7 @@ documentation/doxy/
 *.pyc
 .sconsign.dblite
 *.vts
+*.nc
 
 .settings
 .project
