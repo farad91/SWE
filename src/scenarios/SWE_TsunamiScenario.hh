@@ -27,7 +27,7 @@
 
 #include<netcdf.h>
 #include<stdlib.h>
-using namespace std;
+// using namespace std;
 class SWE_TsunamiScenario(String filename) {
     
 public:
