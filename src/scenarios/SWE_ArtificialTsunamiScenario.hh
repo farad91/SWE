@@ -30,14 +30,24 @@
 
 #include <cmath>
 
+#define PI 3.1415926535897932384626433832795
+
 // all values in this file can be interpreted as meters
 
-class SWE_ArtificialTsunamiScenario {
+class SWE_ArtificialTsunamiScenario : public SWE_Scenario {
     
 public:
     
     float getWaterHeight(float x, float y) { 
-        float height = waterHeightAtRest();
+        return (-1) * getOrigBathymetry(x, y);
+    };
+    
+    float getBathymetry(float x, float y) {
+        // get the original bathymetry
+        float bath = getOrigBathymetry(x, y);
+        
+        // the rest of this function will determine, whether we need to
+        // add a displacement to the original value
         
         // coordinates of the center
         float xc, yc;
@@ -46,34 +56,25 @@ public:
         xc = (getBoundaryPos(BND_LEFT) + getBoundaryPos(BND_RIGHT)) / 2;
         yc = (getBoundaryPos(BND_BOTTOM) + getBoundaryPos(BND_TOP)) / 2;
         
-        // add the displacement to the water height, if we are close to the center
-        // (max 500 meters distance)
-        if(std::abs(x - xc <= 500.f) && std::abs(y - yc <= 500.f))
-            height += getDisplacement(x - xc, y - yc);
+        // add the displacement to the bathymetry, if we are close to the center
+        // if the simulated area (max 500 meters distance in both directions)
+        if(std::abs(x - xc) <= 500.f && std::abs(y - yc) <= 500.f)
+            bath += getDisplacement(x - xc, y - yc);
         
-        return height;
+        return bath;
     };
     
-    float getBathymetry(float x, float y) { return -100.0f; };
+    BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
     
-    virtual float waterHeightAtRest() { return (-1) * getBathymetry(x, y); };
-    
-    virtual float endSimulation() { return 0.1f; };
-    
-    virtual BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
-    
-    virtual float getBoundaryPos(BoundaryEdge edge) {
-        // values are meters
-        if (edge==BND_LEFT || edge==BND_BOTTOM)
-            // left and bottom boundary
-            return 0.0f;
+    float getBoundaryPos(BoundaryEdge i_edge) {
+        if ( i_edge == BND_LEFT || i_edge == BND_BOTTOM)
+            return     0.f;
         else
-            // right and top boundary
-            return 10000.0f; 
+            return 10000.f;
     };
     
-    virtual ~SWE_Scenario() {};
-
+    float endSimulation() { return 180.f; };
+    
 private:
     /**
      * getDisplacement implements the function d(x,y) from the paper of the
@@ -85,14 +86,25 @@ private:
      * @result the displacement
      */
     float getDisplacement(float x, float y) {
-        float dx = std::sin((x/500.f + 1.f) * pi);
+        float dx = std::sin((x/500.f + 1.f) * PI);
         
         float c = y/500.f;
-        float dy = - c * c + 1.f;
+        float dy = (-1) * c * c + 1.f;
         
         return 5.f * dx * dy;
     };
     
+    /**
+     * get the bathymetry before the displacement has occurred
+     * 
+     * @param x x-coordinate
+     * @param y y-coordinate
+     * 
+     * @result the bathymetry before the displacement
+     */
+    float getOrigBathymetry(float x, float y) {
+        return -100.f;
+    }
 };
 
 

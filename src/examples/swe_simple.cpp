@@ -50,7 +50,11 @@
 #ifdef ASAGI
 #include "scenarios/SWE_AsagiScenario.hh"
 #else
+#ifdef ARTIFICIAL_TSUNAMI
+#include "scenarios/SWE_ArtificialTsunamiScenario.hh"
+#else
 #include "scenarios/SWE_simple_scenarios.hh"
+#endif
 #endif
 
 #ifdef READXML
@@ -135,7 +139,11 @@ int main( int argc, char** argv ) {
   #ifdef PARTIALDAMBREAK
   SWE_DamBreakScenario l_scenario;
   #else
+  #ifdef ARTIFICIAL_TSUNAMI
+  SWE_ArtificialTsunamiScenario l_scenario;
+  #else
   SWE_RadialDamBreakScenario l_scenario;
+  #endif
   #endif
   #endif
 
