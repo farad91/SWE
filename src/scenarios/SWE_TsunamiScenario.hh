@@ -26,11 +26,21 @@
  */
 
 #include<netcdf.h>
+#include<stdlib.h>
 using namespace std;
 class SWE_TsunamiScenario(String filename) {
     
 public:
+    // Set variabls vor ID's
     int ncid, zid, xid ,yid, dimX, dimY, lenX, lenY;
+    
+    // initzalize variables for fitting number of Samples in y and x direction
+    int sampX, sampY;
+    void setSamplingSize(int x, int y){
+        sampX = x;
+        sampY = y;
+    };
+    
     //Open .nc file
     if((retval = nc_open(filename,NC_NOWRITE, &ncid)))
         ERR(retval);
@@ -45,12 +55,14 @@ public:
         ERR(retval);
     if((retval = nc_inq_dimid(ncid, "y", &dimY)))
         ERR(retval);
+    
     //get length x,y;
     nc_inq_dimlen(ncid,dimX,&lenX);
     nc_inq_dimlen(ncid,dimY,&lenY);
+    
     //GET boundery position
-       float getBoundaryPos(BoundaryEdge i_edge) {
-       if ( i_edge == BND_LEFT || i_edge == BND_RIGHT)
+    float getBoundaryPos(BoundaryEdge i_edge) {
+        if ( i_edge == BND_LEFT || i_edge == BND_RIGHT){
             float bndx[lenX);
             if((retval = nc_get_var_int(ncid, xid, bndx[0])))
                 ERR(retval);
@@ -58,7 +70,8 @@ public:
                 return bndx[0];
             else
                 return bndx[lenX-1];
-       else
+        }
+        else{
             float bndy[lenY);
             if((retval = nc_get_var_int(ncid, yid, bndy[0])))
                 ERR(retval);
@@ -66,6 +79,21 @@ public:
                 return bndy[0];
             else
                 return bndy[lenY-1];
-    }    
+        }
+    };
+    
+    //Get waterhigh
+    float getWaterHeight(float x, float y) {
+        float bath[lenX][lenY]; 
+        if((retval = nc_get_var_int(ncid, zid, bath[0][0])))
+                ERR(retval);
+        y = ((y*sampY)/lenY);
+        x = ((x*sampX)/lenX);
+        return bath[(int)(x+0.5f)][(int)(y+0.5f)]
+        
+    };
+    //Set Bondary conditions
+    BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW;};
+        
 };
 
