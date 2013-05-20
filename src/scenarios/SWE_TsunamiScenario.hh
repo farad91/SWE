@@ -53,84 +53,44 @@ public:
         nc_close(nc_id);
     };
     
-    float getWaterHeight(float x, float y) { 
-        int err_val;
-        int index[3];
-        float result;
-        
-        toGridCoordinates(x, y, &index[0], &index[1]);
-        index[2] = 0;
-        
-        if(err_val = nc_get_var1_float(nc_id, h_id, index, &result))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        return result;
-    };
+    float getWaterHeight(float x, float y) { return -getBathymetry(x,y); };
     
     
     float getBathymetry(float x, float y) {
         int err_val;
-        int index[3];
+        int index[2];
         float result;
         
         toGridCoordinates(x, y, &index[0], &index[1]);
-        index[2] = 0;
-        
-        if(err_val = nc_get_var1_float(nc_id, b_id, index, &result))
+
+        if(err_val = nc_get_var1_float(nc_id, z_id, index, &result))
             cerr <<  nc_strerror(err_val) << endl;
         
         return result;
     };
     
     
-    float getVeloc_u(float x, float y) {
-        int err_val;
-        int index[3];
-        float h, hu;
-        
-        toGridCoordinates(x, y, &index[0], &index[1]);
-        index[2] = 0;
-        
-        // get the value of 'h'
-        if(err_val = nc_get_var1_float(nc_id, h_id, index, &h))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        // get the value of 'hu'
-        if(err_val = nc_get_var1_float(nc_id, hu_id, index, &hu))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        return hu / h;
-    };
+    float getVeloc_u(float x, float y) { return 0.0f; };
     
     
-    float getVeloc_v(float x, float y) {
-        int err_val;
-        int index[3];
-        float h, hv;
-        
-        toGridCoordinates(x, y, &index[2], &index[1]);
-        index[0] = 0;
-        
-        // get the value of 'h'
-        if(err_val = nc_get_var1_float(nc_id, h_id, index, &h))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        // get the value of 'hu'
-        if(err_val = nc_get_var1_float(nc_id, hv_id, index, &hv))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        return hv / h;
-    };
+    float getVeloc_v(float x, float y) { return 0.0f; };
     
-    // get boundary position TODO ?should this not be registert in meters so we get a realistc size of this Block and merge it with other blocks?? 
+    // get boundary position TODO
     float getBoundaryPos(BoundaryEdge i_edge) {
+        float result;
         if( i_edge == BND_RIGHT )
-            return x_size;
+            if(err_val = nc_get_var1_float(nc_id, x_id, x_size, &result))
+            cerr <<  nc_strerror(err_val) << endl;
         else if( i_edge == BND_TOP )
-            return y_size;
+            if(err_val = nc_get_var1_float(nc_id, y_id, y_size, &result))
+            cerr <<  nc_strerror(err_val) << endl;
+        else if( i_edge == BND_BOTTOM )
+            if(err_val = nc_get_var1_float(nc_id, y_id, 0, &result))
+            cerr <<  nc_strerror(err_val) << endl;
         else
-            // left or bottom boundary
-            return 0.f;
+            if(err_val = nc_get_var1_float(nc_id, x_id, 0, &result))
+            cerr <<  nc_strerror(err_val) << endl;
+        return result;
     };
     
     BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
@@ -141,10 +101,12 @@ private:
     int nc_id;
     
     // variable ids
-    int x_id, y_id, h_id, hu_id, hv_id, b_id;
+    int x_id, y_id, z_id;
     
     // float x0, y0;
     float x_size, y_size;
+    // float delta x[n] x[n+1];
+    float x_start, x_delta, y_start, y_delta;
     
     
     /**
@@ -173,13 +135,7 @@ private:
             cerr << nc_strerror(err_val) << endl;
         if(err_val = nc_inq_varid(nc_id, "y",  &y_id ))
             cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_varid(nc_id, "h",  &h_id ))
-            cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_varid(nc_id, "hu", &hu_id))
-            cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_varid(nc_id, "hv", &hv_id))
-            cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_varid(nc_id, "b",  &b_id ))
+        if(err_val = nc_inq_varid(nc_id, "z",  &z_id ))
             cerr << nc_strerror(err_val) << endl;
         
         // get the number of dimensions contained by 'x' and 'y'
@@ -192,17 +148,24 @@ private:
         nc_inq_dimlen(nc_id, dim_x, &x_size);
         nc_inq_dimlen(nc_id, dim_y, &y_size);
         
-        // TODO: read the grid values of the x- and y-axis
-        // nc_get_vara_int(nc_id, x_id, start[], count[], x_coords);
-        // nc_get_vara_int(nc_id, y_id, start[], count[], y_coords);
-        
+        //get additional informations about the resulution of the x and y axes
+        if(err_val = nc_get_var1_float(nc_id, y_id, 0, &y_start))
+            cerr <<  nc_strerror(err_val) << endl;
+        if(err_val = nc_get_var1_float(nc_id, y_id, 1, &y_delta))
+            cerr <<  nc_strerror(err_val) << endl;
+        y_delta -= y_start;
+        if(err_val = nc_get_var1_float(nc_id, x_id, 0, &x_start))
+            cerr <<  nc_strerror(err_val) << endl;
+        if(err_val = nc_get_var1_float(nc_id, x_id, 1, &x_delta))
+            cerr <<  nc_strerror(err_val) << endl;
+        x_delta -= x_start;
         return 0;
     };
     
     
     void toGridCoordinates(float x_in, float y_in, int* x_out, int* y_out) {
         // TODO i think the calculation of getboundarypos is wrong but if this is ment to be right this is quit like this
-        *y_out = (int) y_in+0.5; 
-        *x_out = (int) x_in+0.5;
+        *y_out = (int) ((in_y-y_start)/y_delta)+0.5f; 
+        *x_out = (int) ((x_in-x_start)/x_delta)+0.5f;
     };
 };

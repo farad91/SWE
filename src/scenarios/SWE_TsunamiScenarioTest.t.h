@@ -6,8 +6,8 @@
 class SWE_TsunamiScenarioTest : public CxxTest::TestSuite {
 public:
     void testgetBoundaryPos(){
-        SWE_TsunamiScenario test("test.nc");
+        SWE_Scenario test("test.nc");
         float r = test.getBoundaryPos(BND_RIGHT);
         TS_ASSERT_DELTA(r, 90 , 0.0f);    
-    } 
+    }; 
 };
