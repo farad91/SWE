@@ -109,7 +109,7 @@ public:
         return hv / h;
     };
     
-    // get boundary position ?should this not be registert in meters so we get a realistc size of this Block and merge it with other blocks?? 
+    // get boundary position TODO ?should this not be registert in meters so we get a realistc size of this Block and merge it with other blocks?? 
     float getBoundaryPos(BoundaryEdge i_edge) {
         if( i_edge == BND_RIGHT )
             return x_size;
@@ -122,7 +122,7 @@ public:
     
     BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
     
-    //close the netCDF reader to unlock the nc file when this class isn#t needed any more
+    //TODO close the netCDF reader to unlock the nc file when this class isn#t needed any more
     void close(){
     }
     
