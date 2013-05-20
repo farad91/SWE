@@ -35,7 +35,7 @@
 using namespace std;
 
 
-class SWE_TsunamiScenario(String filename) : public SWE_Scenario {
+class SWE_TsunamiScenario : public SWE_Scenario {
     
 public:
     
@@ -122,7 +122,6 @@ public:
     
     BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
     
-
 private:
     // file id
     int nc_id;
