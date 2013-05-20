@@ -39,6 +39,19 @@ class SWE_TsunamiScenario : public SWE_Scenario {
     
 public:
     
+    /**
+     * load a scenario from a netCDF file
+     * 
+     * @param file the netCDF file to load
+     */
+    SWE_TsunamiScenario(char *file) {
+        readNetCDF(file);
+    };
+    
+    // destructor
+    SWE_TsunamiScenario~() {
+        nc_close(nc_id);
+    };
     
     float getWaterHeight(float x, float y) { 
         int err_val;
@@ -122,9 +135,6 @@ public:
     
     BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
     
-    //TODO close the netCDF reader to unlock the nc file when this class isn#t needed any more
-    void close(){
-    }
     
 private:
     // file id
@@ -192,7 +202,7 @@ private:
     
     void toGridCoordinates(float x_in, float y_in, int* x_out, int* y_out) {
         // TODO i think the calculation of getboundarypos is wrong but if this is ment to be right this is quit like this
-        &y_out = (int) y_in+0.5; 
-        &x_out = (int) x_in+0.5;
+        *y_out = (int) y_in+0.5; 
+        *x_out = (int) x_in+0.5;
     };
 };
