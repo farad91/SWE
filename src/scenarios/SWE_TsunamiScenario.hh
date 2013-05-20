@@ -109,7 +109,7 @@ public:
         return hv / h;
     };
     
-    // get boundary position
+    // get boundary position ?should this not be registert in meters so we get a realistc size of this Block and merge it with other blocks?? 
     float getBoundaryPos(BoundaryEdge i_edge) {
         if( i_edge == BND_RIGHT )
             return x_size;
@@ -121,6 +121,10 @@ public:
     };
     
     BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
+    
+    //close the netCDF reader to unlock the nc file when this class isn#t needed any more
+    void close(){
+    }
     
 private:
     // file id
@@ -187,6 +191,8 @@ private:
     
     
     void toGridCoordinates(float x_in, float y_in, int* x_out, int* y_out) {
-        // TODO
+        // TODO i think the calculation of getboundarypos is wrong but if this is ment to be right this is quit like this
+        &y_out = (int) y_in+0.5; 
+        &x_out = (int) x_in+0.5;
     };
 };
