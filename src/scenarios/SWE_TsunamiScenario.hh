@@ -25,7 +25,7 @@
  * TODO
  */
 
-#include "scenarios/SWE_Scenario.hh"
+#include "SWE_Scenario.hh"
 
 #include <netcdf.h>
 
@@ -44,12 +44,11 @@ public:
      * 
      * @param file the netCDF file to load
      */
-    SWE_TsunamiScenario(char *file) {
-        readNetCDF(file);
+    SWE_TsunamiScenario() {
     };
     
     // destructor
-    SWE_TsunamiScenario~() {
+    ~SWE_TsunamiScenario() {
         nc_close(nc_id);
     };
     
@@ -58,7 +57,7 @@ public:
     
     float getBathymetry(float x, float y) {
         int err_val;
-        int index[2];
+        unsigned int index[2];
         float result;
         
         toGridCoordinates(x, y, &index[0], &index[1]);
@@ -77,46 +76,36 @@ public:
     
     // get boundary position TODO
     float getBoundaryPos(BoundaryEdge i_edge) {
+        int err_val;
         float result;
-        if( i_edge == BND_RIGHT )
-            if(err_val = nc_get_var1_float(nc_id, x_id, x_size, &result))
+        unsigned int u0 = 1;
+        unsigned int x = x_size-1;
+        unsigned int y = y_size-1;
+        if( i_edge ==BND_RIGHT )
+            if(err_val = nc_get_var1_float(nc_id, x_id, &x, &result))
             cerr <<  nc_strerror(err_val) << endl;
-        else if( i_edge == BND_TOP )
-            if(err_val = nc_get_var1_float(nc_id, y_id, y_size, &result))
+        else if( i_edge ==BND_TOP )
+            if(err_val = nc_get_var1_float(nc_id, y_id, &y, &result))
             cerr <<  nc_strerror(err_val) << endl;
-        else if( i_edge == BND_BOTTOM )
-            if(err_val = nc_get_var1_float(nc_id, y_id, 0, &result))
+        else if( i_edge ==BND_BOTTOM )
+            if(err_val = nc_get_var1_float(nc_id, y_id, &u0, &result))
             cerr <<  nc_strerror(err_val) << endl;
-        else
-            if(err_val = nc_get_var1_float(nc_id, x_id, 0, &result))
+        else if( i_edge ==BND_LEFT )
+            if(err_val = nc_get_var1_float(nc_id, x_id, &u0, &result))
             cerr <<  nc_strerror(err_val) << endl;
         return result;
     };
     
     BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
-    
-    
-private:
-    // file id
-    int nc_id;
-    
-    // variable ids
-    int x_id, y_id, z_id;
-    
-    // float x0, y0;
-    float x_size, y_size;
-    // float delta x[n] x[n+1];
-    float x_start, x_delta, y_start, y_delta;
-    
-    
-    /**
+
+       /**
      * readNetCDF will initialize the ids of the nc file and the ids of all
      * the variables which are being used
      * 
      * @param filename the name of the nc-file to be opened
      * @return 0 if successful, else the error value of the netcdf-library
      */
-    int readNetCDF(char *filename) {
+    int readNetCDF(const char *filename) {
         // error values will be stored in this variable
         int err_val;
         
@@ -149,23 +138,36 @@ private:
         nc_inq_dimlen(nc_id, dim_y, &y_size);
         
         //get additional informations about the resulution of the x and y axes
-        if(err_val = nc_get_var1_float(nc_id, y_id, 0, &y_start))
+        unsigned int u0 = 0;
+        unsigned int u1 = 1;
+        if(err_val = nc_get_var1_float(nc_id, y_id, &u0, &y_start))
             cerr <<  nc_strerror(err_val) << endl;
-        if(err_val = nc_get_var1_float(nc_id, y_id, 1, &y_delta))
+        if(err_val = nc_get_var1_float(nc_id, y_id, &u1, &y_delta))
             cerr <<  nc_strerror(err_val) << endl;
         y_delta -= y_start;
-        if(err_val = nc_get_var1_float(nc_id, x_id, 0, &x_start))
+        if(err_val = nc_get_var1_float(nc_id, x_id, &u0, &x_start))
             cerr <<  nc_strerror(err_val) << endl;
-        if(err_val = nc_get_var1_float(nc_id, x_id, 1, &x_delta))
+        if(err_val = nc_get_var1_float(nc_id, x_id, &u1, &x_delta))
             cerr <<  nc_strerror(err_val) << endl;
         x_delta -= x_start;
         return 0;
-    };
+    }; 
     
+private:
+    // file id
+    int nc_id;
     
-    void toGridCoordinates(float x_in, float y_in, int* x_out, int* y_out) {
+    // variable ids
+    int x_id, y_id, z_id;
+    
+    // float x0, y0;
+    unsigned int x_size, y_size;
+    // float delta x[n] x[n+1];
+    float x_start, x_delta, y_start, y_delta;
+    
+    void toGridCoordinates(float x_in, float y_in, unsigned int* x_out, unsigned int* y_out) {
         // TODO i think the calculation of getboundarypos is wrong but if this is ment to be right this is quit like this
-        *y_out = (int) ((in_y-y_start)/y_delta)+0.5f; 
-        *x_out = (int) ((x_in-x_start)/x_delta)+0.5f;
+        *y_out = (unsigned int) (((y_in-y_start)/y_delta)+0.5f); 
+        *x_out = (unsigned int) (((x_in-x_start)/x_delta)+0.5f);
     };
 };
