@@ -1,7 +1,7 @@
 #include <cxxtest/TestSuite.h>
-
-#include "SWE_TsunamiScenario.hh"
 #define private public
+#include "SWE_TsunamiScenario.hh"
+
 
 class SWE_TsunamiScenarioTest : public CxxTest::TestSuite {
 public:
@@ -55,6 +55,22 @@ public:
             for(int y = 0; y < 5; y++){
                 float in_y = b + ((t-b)/4)*y;
                 float bath = test.getBathymetry(in_x,in_y);
+                TS_ASSERT_DELTA(bath,((x*5)+y), 0.0f);
+            }
+        }
+    };
+    void testgetPurBathymetry(void){
+        SWE_TsunamiScenario test;
+        test.readNetCDF("test.nc","d_test.nc");
+        float r = test.getBoundaryPos(BND_RIGHT);
+        float l = test.getBoundaryPos(BND_LEFT);
+        float t = test.getBoundaryPos(BND_TOP);
+        float b = test.getBoundaryPos(BND_BOTTOM);
+        for(int x = 0; x < 10; x++){
+            float in_x = l + ((r-l)/9)*x;
+            for(int y = 0; y < 5; y++){
+                float in_y = b + ((t-b)/4)*y;
+                float bath = test.getPurBathymetry(in_x,in_y);
                 TS_ASSERT_DELTA(bath,((x*5)+y), 0.0f);
             }
         }
