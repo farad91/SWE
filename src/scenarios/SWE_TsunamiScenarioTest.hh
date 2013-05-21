@@ -58,5 +58,23 @@ public:
                 TS_ASSERT_DELTA(bath,((x*5)+y), 0.0f);
             }
         }
+        for(int x = 0; x < 10; x++){
+            float in_x = l + ((r-l)/9)*x;
+            for(int y = 0; y < 5; y++){
+                float in_y = b + ((t-b)/4)*y;
+                float water = test.getWaterHeight(in_x,in_y);
+                TS_ASSERT_DELTA(water,-((x*5)+y), 0.0f);
+            }
+        }
+        for(int x = 0; x < 10; x++){
+            float in_x = l + ((r-l)/9)*x;
+            for(int y = 0; y < 5; y++){
+                float in_y = b + ((t-b)/4)*y;
+                float hu = test.getVeloc_u(in_x,in_y);
+                float hv = test.getVeloc_v(in_x,in_y);
+                TS_ASSERT_DELTA(hv,0, 0.0f);
+                TS_ASSERT_DELTA(hu,0, 0.0f);
+            }
+        }
     };
 };
