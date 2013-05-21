@@ -52,20 +52,18 @@ public:
         nc_close(nc_id);
     };
     
-    float getWaterHeight(float x, float y) { return -getBathymetry(x,y); };
+    float getWaterHeight(float x, float y) { return -getPurBathymetry(x,y); };
     
     
     float getBathymetry(float x, float y) {
         int err_val;
-        unsigned int index[2];
-        float result;
-        
-        toGridCoordinates(x, y, &index[0], &index[1]);
-
-        if(err_val = nc_get_var1_float(nc_id, z_id, index, &result))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        return result;
+        float result = 0.f;
+        unsigned int index[2];        
+        if(d_toGridCoordinates(x,y,&index[0], &index[1])){
+            if(err_val = nc_get_var1_float(d_nc_id, d_z_id, index, &result))
+                cerr <<  nc_strerror(err_val) << endl;
+        }
+        return result+getPurBathymetry(x,y);
     };
     
     
@@ -109,12 +107,12 @@ public:
      * @param filename the name of the nc-file to be opened
      * @return 0 if successful, else the error value of the netcdf-library
      */
-    int readNetCDF(const char *filename) {
+    int readNetCDF(const char *filename, const char *d_filename) {
         // error values will be stored in this variable
         int err_val;
         
         // number of dimensions of the variables 'x' and 'y'
-        int dim_x, dim_y;
+        int dim_x, dim_y, d_dim_x, d_dim_y;
         
         
         // open .nc file
@@ -122,7 +120,10 @@ public:
             cerr << nc_strerror(err_val) << endl;
             return err_val;
         }
-        
+        if(err_val = nc_open(d_filename, NC_NOWRITE, &d_nc_id)) {
+            cerr << nc_strerror(err_val) << endl;
+            return err_val;
+        }
         // get the variables IDs 
         if(err_val = nc_inq_varid(nc_id, "x",  &x_id ))
             cerr << nc_strerror(err_val) << endl;
@@ -131,15 +132,30 @@ public:
         if(err_val = nc_inq_varid(nc_id, "z",  &z_id ))
             cerr << nc_strerror(err_val) << endl;
         
+        if(err_val = nc_inq_varid(d_nc_id, "x",  &d_x_id ))
+            cerr << nc_strerror(err_val) << endl;
+        if(err_val = nc_inq_varid(d_nc_id, "y",  &d_y_id ))
+            cerr << nc_strerror(err_val) << endl;
+        if(err_val = nc_inq_varid(d_nc_id, "z",  &d_z_id ))
+            cerr << nc_strerror(err_val) << endl;
+        
         // get the number of dimensions contained by 'x' and 'y'
         if(err_val = nc_inq_dimid(nc_id, "x", &dim_x))
             cerr << nc_strerror(err_val) << endl;
         if(err_val = nc_inq_dimid(nc_id, "y", &dim_y))
             cerr << nc_strerror(err_val) << endl;
         
+        if(err_val = nc_inq_dimid(d_nc_id, "x", &d_dim_x))
+            cerr << nc_strerror(err_val) << endl;
+        if(err_val = nc_inq_dimid(d_nc_id, "y", &d_dim_y))
+            cerr << nc_strerror(err_val) << endl;
+        
         // get length x, y;
         nc_inq_dimlen(nc_id, dim_x, &x_size);
         nc_inq_dimlen(nc_id, dim_y, &y_size);
+        
+        nc_inq_dimlen(d_nc_id, d_dim_x, &d_x_size);
+        nc_inq_dimlen(d_nc_id, d_dim_y, &d_y_size);
         
         //get additional informations about the resulution of the x and y axes
         unsigned int u0 = 0;
@@ -154,24 +170,60 @@ public:
         if(err_val = nc_get_var1_float(nc_id, x_id, &u1, &x_delta))
             cerr <<  nc_strerror(err_val) << endl;
         x_delta -= x_start;
+        
+        if(err_val = nc_get_var1_float(d_nc_id, d_y_id, &u0, &d_y_start))
+            cerr <<  nc_strerror(err_val) << endl;
+        if(err_val = nc_get_var1_float(d_nc_id, d_y_id, &u1, &d_y_delta))
+            cerr <<  nc_strerror(err_val) << endl;
+        d_y_delta -= d_y_start;
+        if(err_val = nc_get_var1_float(d_nc_id, d_x_id, &u0, &d_x_start))
+            cerr <<  nc_strerror(err_val) << endl;
+        if(err_val = nc_get_var1_float(d_nc_id, d_x_id, &u1, &d_x_delta))
+            cerr <<  nc_strerror(err_val) << endl;
+        x_delta -= x_start;
         return 0;
     }; 
     
 private:
     // file id
-    int nc_id;
+    int nc_id, d_nc_id;
     
     // variable ids
-    int x_id, y_id, z_id;
+    int x_id, y_id, z_id, d_x_id, d_y_id, d_z_id ;
     
     // float x0, y0;
-    unsigned int x_size, y_size;
+    unsigned int x_size, y_size, d_x_size, d_y_size;
     // float delta x[n] x[n+1];
-    float x_start, x_delta, y_start, y_delta;
+    float x_start, x_delta, y_start, y_delta, d_x_start, d_x_delta, d_y_start, d_y_delta;
     
     void toGridCoordinates(float x_in, float y_in, unsigned int* x_out, unsigned int* y_out) {
         // TODO i think the calculation of getboundarypos is wrong but if this is ment to be right this is quit like this
         *y_out = (unsigned int) (((y_in-y_start)/y_delta)+0.5f); 
         *x_out = (unsigned int) (((x_in-x_start)/x_delta)+0.5f);
+    };
+    
+    bool d_toGridCoordinates(float x_in, float y_in, unsigned int* x_out, unsigned int* y_out) {
+        // TODO i think the calculation of getboundarypos is wrong but if this is ment to be right this is quit like this
+        if((x_in > d_x_start-(d_x_delta*0.5f)) && (x_in < d_x_start + (d_x_delta*(d_x_size-0.5))) && 
+            (y_in > d_y_start-(d_y_delta*0.5f)) && (y_in < d_y_start + (d_y_delta*(d_y_size-0.5)))){ 
+            *y_out = (unsigned int) (((y_in-d_y_start)/d_y_delta)+0.5f); 
+            *x_out = (unsigned int) (((x_in-d_x_start)/d_x_delta)+0.5f);
+            return true;
+        }
+        else 
+            return false;
+    };
+    
+    float getPurBathymetry(float x, float y) {
+        int err_val;
+        unsigned int index[2];
+        float result;
+        
+        toGridCoordinates(x, y, &index[0], &index[1]);
+
+        if(err_val = nc_get_var1_float(nc_id, z_id, index, &result))
+            cerr <<  nc_strerror(err_val) << endl;
+        
+        return result;
     };
 };

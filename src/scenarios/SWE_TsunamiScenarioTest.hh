@@ -7,7 +7,7 @@ class SWE_TsunamiScenarioTest : public CxxTest::TestSuite {
 public:
     void testgetBoundaryPos(void){
         SWE_TsunamiScenario test;
-        test.readNetCDF("test.nc");
+        test.readNetCDF("test.nc","d_test.nc");
         float r = test.getBoundaryPos(BND_RIGHT);
         TS_ASSERT_DELTA(r, 700 , 0.0f);
         float l = test.getBoundaryPos(BND_LEFT);
@@ -19,7 +19,7 @@ public:
     };
     void testgetBathymetry(void) {
         SWE_TsunamiScenario test;
-        test.readNetCDF("test.nc");
+        test.readNetCDF("test.nc","d_test.nc");
         float r = test.getBathymetry(700.f,-80.f);
         TS_ASSERT_DELTA(r, 49 , 0.0f);
         r = test.getBathymetry(749.9f,-84.9f);
@@ -29,7 +29,7 @@ public:
     };
     void testcornners(void){
     SWE_TsunamiScenario test;
-        test.readNetCDF("test.nc");
+        test.readNetCDF("test.nc","d_test.nc");
         float r = test.getBoundaryPos(BND_RIGHT);
         float l = test.getBoundaryPos(BND_LEFT);
         float t = test.getBoundaryPos(BND_TOP);
@@ -45,7 +45,7 @@ public:
     };
     void testpossibleScenario(void){
         SWE_TsunamiScenario test;
-        test.readNetCDF("test.nc");
+        test.readNetCDF("test.nc","d_test.nc");
         float r = test.getBoundaryPos(BND_RIGHT);
         float l = test.getBoundaryPos(BND_LEFT);
         float t = test.getBoundaryPos(BND_TOP);
@@ -58,6 +58,14 @@ public:
                 TS_ASSERT_DELTA(bath,((x*5)+y), 0.0f);
             }
         }
+    };
+    void testgetWaterHeight(void){
+        SWE_TsunamiScenario test;
+        test.readNetCDF("test.nc","d_test.nc");
+        float r = test.getBoundaryPos(BND_RIGHT);
+        float l = test.getBoundaryPos(BND_LEFT);
+        float t = test.getBoundaryPos(BND_TOP);
+        float b = test.getBoundaryPos(BND_BOTTOM);
         for(int x = 0; x < 10; x++){
             float in_x = l + ((r-l)/9)*x;
             for(int y = 0; y < 5; y++){
@@ -66,6 +74,14 @@ public:
                 TS_ASSERT_DELTA(water,-((x*5)+y), 0.0f);
             }
         }
+    };
+    void testgetVelco(void){
+        SWE_TsunamiScenario test;
+        test.readNetCDF("test.nc","d_test.nc");
+        float r = test.getBoundaryPos(BND_RIGHT);
+        float l = test.getBoundaryPos(BND_LEFT);
+        float t = test.getBoundaryPos(BND_TOP);
+        float b = test.getBoundaryPos(BND_BOTTOM);
         for(int x = 0; x < 10; x++){
             float in_x = l + ((r-l)/9)*x;
             for(int y = 0; y < 5; y++){
