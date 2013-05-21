@@ -78,21 +78,25 @@ public:
     float getBoundaryPos(BoundaryEdge i_edge) {
         int err_val;
         float result;
-        unsigned int u0 = 1;
+        unsigned int u0 = 0;
         unsigned int x = x_size-1;
         unsigned int y = y_size-1;
-        if( i_edge ==BND_RIGHT )
+        if( i_edge == BND_RIGHT ){
             if(err_val = nc_get_var1_float(nc_id, x_id, &x, &result))
-            cerr <<  nc_strerror(err_val) << endl;
-        else if( i_edge ==BND_TOP )
+                cerr <<  nc_strerror(err_val) << endl;
+            }
+        else if( i_edge == BND_TOP ){
             if(err_val = nc_get_var1_float(nc_id, y_id, &y, &result))
-            cerr <<  nc_strerror(err_val) << endl;
-        else if( i_edge ==BND_BOTTOM )
+                cerr <<  nc_strerror(err_val) << endl;
+                }
+        else if( i_edge == BND_BOTTOM ){
             if(err_val = nc_get_var1_float(nc_id, y_id, &u0, &result))
-            cerr <<  nc_strerror(err_val) << endl;
-        else if( i_edge ==BND_LEFT )
+                cerr <<  nc_strerror(err_val) << endl;
+            }
+        else if( i_edge == BND_LEFT ){
             if(err_val = nc_get_var1_float(nc_id, x_id, &u0, &result))
-            cerr <<  nc_strerror(err_val) << endl;
+                cerr <<  nc_strerror(err_val) << endl;
+            }
         return result;
     };
     
