@@ -74,10 +74,10 @@ int main( int argc, char** argv ) {
    */
   // check if the necessary command line input parameters are given
   #ifndef READXML
-  if(argc != 6) {
+  if(argc != 7) {
     std::cout << "Aborting ... please provide proper input parameters." << std::endl
-              << "Example: ./SWE_parallel 200 300 /work/openmp_out" << std::endl
-              << "\tfor a single block of size 200 * 300" << std::endl;
+              << "Example: ./SWE_parallel 200 300 /work/openmp_out bat.nc dis.nc 20" << std::endl
+              << "\tfor a single block of size 200 * 300 and simulation time 20sec" << std::endl;
     return 1;
   }
   #endif
@@ -149,7 +149,7 @@ int main( int argc, char** argv ) {
   #endif
 
   //! number of checkpoints for visualization (at each checkpoint in time, an output file is written).
-  int l_numberOfCheckPoints = 20;
+  int l_numberOfCheckPoints = atoi(argv[6]);
 
   //! size of a single cell in x- and y-direction
   float l_dX, l_dY;
@@ -181,7 +181,7 @@ int main( int argc, char** argv ) {
 
 
   //! time when the simulation ends.
-  float l_endSimulation = l_scenario.endSimulation();
+  float l_endSimulation = 20;//l_scenario.endSimulation();
 
   //! checkpoints when output files are written.
   float* l_checkPoints = new float[l_numberOfCheckPoints+1];

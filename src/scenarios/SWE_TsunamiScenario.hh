@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <cassert>
 
 using namespace std;
 
@@ -82,18 +83,22 @@ public:
         if( i_edge == BND_RIGHT ){
             if(err_val = nc_get_var1_float(nc_id, x_id, &x, &result))
                 cerr <<  nc_strerror(err_val) << endl;
+                result += (x_delta*0.5f);
             }
         else if( i_edge == BND_TOP ){
             if(err_val = nc_get_var1_float(nc_id, y_id, &y, &result))
                 cerr <<  nc_strerror(err_val) << endl;
+                result += (y_delta*0.5f);
                 }
         else if( i_edge == BND_BOTTOM ){
             if(err_val = nc_get_var1_float(nc_id, y_id, &u0, &result))
                 cerr <<  nc_strerror(err_val) << endl;
+                result -= (y_delta*0.5f);
             }
         else if( i_edge == BND_LEFT ){
             if(err_val = nc_get_var1_float(nc_id, x_id, &u0, &result))
                 cerr <<  nc_strerror(err_val) << endl;
+                result -= (x_delta*0.5f);
             }
         return result;
     };
@@ -203,6 +208,15 @@ private:
     void toGridCoordinates(float x_in, float y_in, size_t* x_out, size_t* y_out) {
         *y_out = (size_t) (((y_in-y_start)/y_delta)+0.5f); 
         *x_out = (size_t) (((x_in-x_start)/x_delta)+0.5f);
+        if(*x_out<0)
+            *x_out=0;
+        if(*y_out < 0)
+            *y_out = 0;
+        if(*x_out >= x_size)
+            *x_out = x_size-1;
+        if(*y_out >=y_size)
+            *y_out = y_size-1;
+        assert(*y_out <  y_size && *x_out < x_size);
     };
     
     // This funktion checks if displacemant is relevant for the cordinates and if so it makes an fitting for them to the grid of the Displacement

@@ -10,13 +10,13 @@ public:
         SWE_TsunamiScenario test;
         test.readNetCDF("test.nc","d_test.nc");
         float r = test.getBoundaryPos(BND_RIGHT);
-        TS_ASSERT_DELTA(r, 700 , 0.0f);
+        TS_ASSERT_DELTA(r, 750 , 0.0f);
         float l = test.getBoundaryPos(BND_LEFT);
-        TS_ASSERT_DELTA(l, -200, 0.0f);
+        TS_ASSERT_DELTA(l, -250, 0.0f);
         float t = test.getBoundaryPos(BND_TOP);
-        TS_ASSERT_DELTA(t, -80 , 0.0f);
+        TS_ASSERT_DELTA(t, -75 , 0.0f);
         float b = test.getBoundaryPos(BND_BOTTOM);
-        TS_ASSERT_DELTA(b, -120 , 0.0f);   
+        TS_ASSERT_DELTA(b, -125 , 0.0f);   
     };
     void testgetBathymetry(void) {
         SWE_TsunamiScenario test;
