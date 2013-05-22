@@ -180,11 +180,13 @@ public:
             cerr <<  nc_strerror(err_val) << endl;
         if(err_val = nc_get_var1_float(d_nc_id, d_x_id, &u1, &d_x_delta))
             cerr <<  nc_strerror(err_val) << endl;
-        x_delta -= x_start;
+        d_x_delta -= d_x_start;
         return 0;
     }; 
     
 private:
+    // all variables are also declared for the displacement data and marked wit d_*    
+    
     // file id
     int nc_id, d_nc_id;
     
@@ -193,17 +195,19 @@ private:
     
     // float x0, y0;
     unsigned int x_size, y_size, d_x_size, d_y_size;
+    
     // float delta x[n] x[n+1];
     float x_start, x_delta, y_start, y_delta, d_x_start, d_x_delta, d_y_start, d_y_delta;
     
+    // This function makes a Fitting of the x an y coordinates to the grid of the basic Bathymetry Data 
     void toGridCoordinates(float x_in, float y_in, unsigned int* x_out, unsigned int* y_out) {
-        // TODO i think the calculation of getboundarypos is wrong but if this is ment to be right this is quit like this
         *y_out = (unsigned int) (((y_in-y_start)/y_delta)+0.5f); 
         *x_out = (unsigned int) (((x_in-x_start)/x_delta)+0.5f);
     };
     
+    // This funktion checks if displacemant is relevant for the cordinates and if so it makes an fitting for them to the grid of the Displacement
+    // @return bool  ( displacement avaible for this position;
     bool d_toGridCoordinates(float x_in, float y_in, unsigned int* x_out, unsigned int* y_out) {
-        // TODO i think the calculation of getboundarypos is wrong but if this is ment to be right this is quit like this
         if((x_in > d_x_start-(d_x_delta*0.5f)) && (x_in < d_x_start + (d_x_delta*(d_x_size-0.5))) && 
             (y_in > d_y_start-(d_y_delta*0.5f)) && (y_in < d_y_start + (d_y_delta*(d_y_size-0.5)))){ 
             *y_out = (unsigned int) (((y_in-d_y_start)/d_y_delta)+0.5f); 
@@ -214,11 +218,12 @@ private:
             return false;
     };
     
+    //retuns Bathymetry data without displacement
     float getPurBathymetry(float x, float y) {
         int err_val;
         unsigned int index[2];
         float result;
-        
+                
         toGridCoordinates(x, y, &index[0], &index[1]);
 
         if(err_val = nc_get_var1_float(nc_id, z_id, index, &result))

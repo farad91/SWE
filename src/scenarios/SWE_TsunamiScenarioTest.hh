@@ -34,15 +34,16 @@ public:
         float l = test.getBoundaryPos(BND_LEFT);
         float t = test.getBoundaryPos(BND_TOP);
         float b = test.getBoundaryPos(BND_BOTTOM);
-        float bath = test.getBathymetry(l,b);
+        float bath = test.getPurBathymetry(l,b);
         TS_ASSERT_DELTA(bath,0.f, 0.0f);
-        bath = test.getBathymetry(l,t);
+        bath = test.getPurBathymetry(l,t);
         TS_ASSERT_DELTA(bath,4.f, 0.0f);
-        bath = test.getBathymetry(r,b);
+        bath = test.getPurBathymetry(r,b);
         TS_ASSERT_DELTA(bath,45, 0.0f);
-        bath = test.getBathymetry(r,t);
+        bath = test.getPurBathymetry(r,t);
         TS_ASSERT_DELTA(bath,49.f, 0.0f);
     };
+    
     void testpossibleScenario(void){
         SWE_TsunamiScenario test;
         test.readNetCDF("test.nc","d_test.nc");
@@ -59,6 +60,7 @@ public:
             }
         }
     };
+    
     void testgetPurBathymetry(void){
         SWE_TsunamiScenario test;
         test.readNetCDF("test.nc","d_test.nc");
@@ -75,6 +77,7 @@ public:
             }
         }
     };
+    
     void testgetWaterHeight(void){
         SWE_TsunamiScenario test;
         test.readNetCDF("test.nc","d_test.nc");
@@ -91,6 +94,7 @@ public:
             }
         }
     };
+    
     void testgetVelco(void){
         SWE_TsunamiScenario test;
         test.readNetCDF("test.nc","d_test.nc");
