@@ -1,5 +1,6 @@
 #include <cxxtest/TestSuite.h>
 #define private public
+
 #include "SWE_TsunamiScenario.hh"
 
 

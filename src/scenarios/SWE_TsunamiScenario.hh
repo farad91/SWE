@@ -58,7 +58,7 @@ public:
     float getBathymetry(float x, float y) {
         int err_val;
         float result = 0.f;
-        unsigned int index[2];        
+        size_t index[2];        
         if(d_toGridCoordinates(x,y,&index[0], &index[1])){
             if(err_val = nc_get_var1_float(d_nc_id, d_z_id, index, &result))
                 cerr <<  nc_strerror(err_val) << endl;
@@ -76,9 +76,9 @@ public:
     float getBoundaryPos(BoundaryEdge i_edge) {
         int err_val;
         float result;
-        unsigned int u0 = 0;
-        unsigned int x = x_size-1;
-        unsigned int y = y_size-1;
+        size_t u0 = 0;
+        size_t x = x_size-1;
+        size_t y = y_size-1;
         if( i_edge == BND_RIGHT ){
             if(err_val = nc_get_var1_float(nc_id, x_id, &x, &result))
                 cerr <<  nc_strerror(err_val) << endl;
@@ -158,8 +158,8 @@ public:
         nc_inq_dimlen(d_nc_id, d_dim_y, &d_y_size);
         
         //get additional informations about the resulution of the x and y axes
-        unsigned int u0 = 0;
-        unsigned int u1 = 1;
+        size_t u0 = 0;
+        size_t u1 = 1;
         if(err_val = nc_get_var1_float(nc_id, y_id, &u0, &y_start))
             cerr <<  nc_strerror(err_val) << endl;
         if(err_val = nc_get_var1_float(nc_id, y_id, &u1, &y_delta))
@@ -194,24 +194,24 @@ private:
     int x_id, y_id, z_id, d_x_id, d_y_id, d_z_id ;
     
     // float x0, y0;
-    unsigned int x_size, y_size, d_x_size, d_y_size;
+    size_t x_size, y_size, d_x_size, d_y_size;
     
     // float delta x[n] x[n+1];
     float x_start, x_delta, y_start, y_delta, d_x_start, d_x_delta, d_y_start, d_y_delta;
     
     // This function makes a Fitting of the x an y coordinates to the grid of the basic Bathymetry Data 
-    void toGridCoordinates(float x_in, float y_in, unsigned int* x_out, unsigned int* y_out) {
-        *y_out = (unsigned int) (((y_in-y_start)/y_delta)+0.5f); 
-        *x_out = (unsigned int) (((x_in-x_start)/x_delta)+0.5f);
+    void toGridCoordinates(float x_in, float y_in, size_t* x_out, size_t* y_out) {
+        *y_out = (size_t) (((y_in-y_start)/y_delta)+0.5f); 
+        *x_out = (size_t) (((x_in-x_start)/x_delta)+0.5f);
     };
     
     // This funktion checks if displacemant is relevant for the cordinates and if so it makes an fitting for them to the grid of the Displacement
     // @return bool  ( displacement avaible for this position;
-    bool d_toGridCoordinates(float x_in, float y_in, unsigned int* x_out, unsigned int* y_out) {
+    bool d_toGridCoordinates(float x_in, float y_in, size_t* x_out, size_t* y_out) {
         if((x_in > d_x_start-(d_x_delta*0.5f)) && (x_in < d_x_start + (d_x_delta*(d_x_size-0.5))) && 
             (y_in > d_y_start-(d_y_delta*0.5f)) && (y_in < d_y_start + (d_y_delta*(d_y_size-0.5)))){ 
-            *y_out = (unsigned int) (((y_in-d_y_start)/d_y_delta)+0.5f); 
-            *x_out = (unsigned int) (((x_in-d_x_start)/d_x_delta)+0.5f);
+            *y_out = (size_t) (((y_in-d_y_start)/d_y_delta)+0.5f); 
+            *x_out = (size_t) (((x_in-d_x_start)/d_x_delta)+0.5f);
             return true;
         }
         else 
@@ -221,7 +221,7 @@ private:
     //retuns Bathymetry data without displacement
     float getPurBathymetry(float x, float y) {
         int err_val;
-        unsigned int index[2];
+        size_t index[2];
         float result;
                 
         toGridCoordinates(x, y, &index[0], &index[1]);
