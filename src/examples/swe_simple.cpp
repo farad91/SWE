@@ -53,7 +53,11 @@
 #ifdef ARTIFICIAL_TSUNAMI
 #include "scenarios/SWE_ArtificialTsunamiScenario.hh"
 #else
+#ifdef TSUNAMINC
 #include "scenarios/SWE_TsunamiScenario.hh"
+#else
+#include "scenarios/SWE_simple_scenarios.hh"
+#endif
 #endif
 #endif
 
@@ -74,12 +78,21 @@ int main( int argc, char** argv ) {
    */
   // check if the necessary command line input parameters are given
   #ifndef READXML
+  #ifdef TSUNAMINC
   if(argc != 7) {
     std::cout << "Aborting ... please provide proper input parameters." << std::endl
               << "Example: ./SWE_parallel 200 300 /work/openmp_out bat.nc dis.nc 20" << std::endl
               << "\tfor a single block of size 200 * 300 and simulation time 20sec" << std::endl;
     return 1;
   }
+  #else
+  if(argc != 4) {
+    std::cout << "Aborting ... please provide proper input parameters." << std::endl
+              << "Example: ./SWE_parallel 200 300 /work/openmp_out bat.nc dis.nc 20" << std::endl
+              << "\tfor a single block of size 200 * 300" << std::endl;
+    return 1;
+  }
+  #endif
   #endif
 
   //! number of grid cells in x- and y-direction.
@@ -142,14 +155,18 @@ int main( int argc, char** argv ) {
   #ifdef ARTIFICIAL_TSUNAMI
   SWE_ArtificialTsunamiScenario l_scenario;
   #else
+  #ifdef TSUNAMINC
   SWE_TsunamiScenario l_scenario;
   l_scenario.readNetCDF(argv[4],argv[5]);
+  #else
+  SWE_RadialDamBreakScenario l_scenario;
+  #endif
   #endif
   #endif
   #endif
 
   //! number of checkpoints for visualization (at each checkpoint in time, an output file is written).
-  int l_numberOfCheckPoints = atoi(argv[6]);
+  int l_numberOfCheckPoints = 20;
 
   //! size of a single cell in x- and y-direction
   float l_dX, l_dY;
@@ -181,8 +198,11 @@ int main( int argc, char** argv ) {
 
 
   //! time when the simulation ends.
-  float l_endSimulation = 20;//l_scenario.endSimulation();
-
+  #ifdef TSUNAMINC
+  float l_endSimulation = atoi(argv[6]);
+  #else
+  float l_endSimulation = l_scenario.endSimulation();
+  #endif
   //! checkpoints when output files are written.
   float* l_checkPoints = new float[l_numberOfCheckPoints+1];
 

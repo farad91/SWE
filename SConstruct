@@ -112,7 +112,7 @@ vars.AddVariables(
                 ),
   
   EnumVariable( 'scenario', 'compile with custom Scenario', 'default',
-                allowed_values=('default', 'PartialDamBreak', 'artiftsunami')              
+                allowed_values=('default', 'PartialDamBreak', 'artiftsunami','Tsunami.nc')              
               ),
   
   EnumVariable( 'method', 'compile with runTimestep (better performance in combination with block=dimsplit) (block=dimsplit required)', 'default',
@@ -333,6 +333,8 @@ if env['scenario'] == 'PartialDamBreak':
   env.Append(CPPDEFINES=['PARTIALDAMBREAK'])
 elif env['scenario'] == 'artiftsunami':
   env.Append(CPPDEFINES=['ARTIFICIAL_TSUNAMI'])
+elif env['scenario'] == 'Tsunami.nc':
+  env.Append(CPPDEFINES=['TSUNAMINC'])
 
 #
 # setup the program name and the build directory
