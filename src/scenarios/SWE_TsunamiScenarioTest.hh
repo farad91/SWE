@@ -55,12 +55,12 @@ public:
         for(int x = 0; x < 10; x++){
             float in_x = l + ((r-l)/9)*x;
             int a = 0;
-            if ( in_x > -115.f && in_x < 95.f)
+            if ( in_x >= -115.f && in_x <= 95.f)
                 a = 1; 
             for(int y = 0; y < 5; y++){
                 float in_y = b + ((t-b)/4)*y;
                 int c = 0;
-                if( in_y > -103.5f && in_y < -98.5f)
+                if( in_y >= -103.5f && in_y <= -98.5f)
                     c = 1;
                 float bath = test.getBathymetry(in_x,in_y);
                 TS_ASSERT_DELTA(bath,((x*5)+y)+(a*c), 0.0f);
