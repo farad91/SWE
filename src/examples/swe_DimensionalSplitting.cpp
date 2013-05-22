@@ -35,9 +35,11 @@
 
 
 #include "writer/VtkWriter.hh"
+#include "writer/NetCdfWriter.hh"
 
 
 #include "scenarios/SWE_simple_scenarios.hh"
+#include "scenarios/SWE_TsunamiScenario.hh"
 
 
 #include "tools/help.hh"
@@ -52,7 +54,7 @@ int main( int argc, char** argv ) {
    * Initialization.
    */
   // check if the necessary command line input parameters are given
-  if(argc != 4) {
+  if(argc != 6) {
     std::cout << "Aborting ... please provide proper input parameters." << std::endl
               << "Example: ./SWE_parallel 200 300 /work/openmp_out" << std::endl
               << "\tfor a single block of size 200 * 300" << std::endl;
@@ -75,7 +77,8 @@ int main( int argc, char** argv ) {
   #ifdef PARTIALDAMBREAK
   SWE_DamBreakScenario l_scenario;
   #else
-  SWE_RadialDamBreakScenario l_scenario;
+  SWE_TsunamiScenario l_scenario;
+  l_scenario.readNetCDF(argv[4],argv[5]);
   #endif
 
   //! number of checkpoints for visualization (at each checkpoint in time, an output file is written).
