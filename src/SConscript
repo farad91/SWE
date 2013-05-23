@@ -78,8 +78,7 @@ if env['asagi'] == True:
 
 # netCDF writer
 if env['writeNetCDF'] == True:
-  #sourceFiles.append( ['writer/NetCdfWriter.cpp'] )
-  sourceFiles.append( ['writer/NetCdfWriterCP.cpp'] )
+  sourceFiles.append( ['writer/NetCdfWriter.cpp'] )
 else:
   sourceFiles.append( ['writer/VtkWriter.cpp'] )
 
