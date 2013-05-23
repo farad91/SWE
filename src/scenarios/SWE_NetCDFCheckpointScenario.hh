@@ -25,7 +25,7 @@
  * TODO
  */
 
-#include "scenarios/SWE_Scenario.hh"
+#include "SWE_Scenario.hh"
 
 #include <netcdf.h>
 
@@ -44,122 +44,27 @@ public:
      * 
      * @param file the netCDF file to load
      */
-    SWE_TsunamiScenario(char *file) {
-        readNetCDF(file);
+    SWE_NetCDFCheckpointScenario() {
     };
     
     // destructor
-    SWE_TsunamiScenario~() {
+    ~SWE_NetCDFCheckpointScenario() {
         nc_close(nc_id);
     };
     
-    float getWaterHeight(float x, float y) { 
-        int err_val;
-        int index[3];
-        float result;
-        
-        toGridCoordinates(x, y, &index[0], &index[1]);
-        index[2] = 0;
-        
-        if(err_val = nc_get_var1_float(nc_id, h_id, index, &result))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        return result;
-    };
-    
-    
-    float getBathymetry(float x, float y) {
-        int err_val;
-        int index[3];
-        float result;
-        
-        toGridCoordinates(x, y, &index[0], &index[1]);
-        index[2] = 0;
-        
-        if(err_val = nc_get_var1_float(nc_id, b_id, index, &result))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        return result;
-    };
-    
-    
-    float getVeloc_u(float x, float y) {
-        int err_val;
-        int index[3];
-        float h, hu;
-        
-        toGridCoordinates(x, y, &index[0], &index[1]);
-        index[2] = 0;
-        
-        // get the value of 'h'
-        if(err_val = nc_get_var1_float(nc_id, h_id, index, &h))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        // get the value of 'hu'
-        if(err_val = nc_get_var1_float(nc_id, hu_id, index, &hu))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        return hu / h;
-    };
-    
-    
-    float getVeloc_v(float x, float y) {
-        int err_val;
-        int index[3];
-        float h, hv;
-        
-        toGridCoordinates(x, y, &index[2], &index[1]);
-        index[0] = 0;
-        
-        // get the value of 'h'
-        if(err_val = nc_get_var1_float(nc_id, h_id, index, &h))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        // get the value of 'hu'
-        if(err_val = nc_get_var1_float(nc_id, hv_id, index, &hv))
-            cerr <<  nc_strerror(err_val) << endl;
-        
-        return hv / h;
-    };
-    
-    // get boundary position TODO ?should this not be registert in meters so we get a realistc size of this Block and merge it with other blocks?? 
-    float getBoundaryPos(BoundaryEdge i_edge) {
-        if( i_edge == BND_RIGHT )
-            return x_size;
-        else if( i_edge == BND_TOP )
-            return y_size;
-        else
-            // left or bottom boundary
-            return 0.f;
-    };
-    
-    BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
-    
-    
-private:
-    // file id
-    int nc_id;
-    
-    // variable ids
-    int x_id, y_id, h_id, hu_id, hv_id, b_id;
-    
-    // float x0, y0;
-    float x_size, y_size;
-    
-    
     /**
-     * readNetCDF will initialize the ids of the nc file and the ids of all
-     * the variables which are being used
-     * 
-     * @param filename the name of the nc-file to be opened
-     * @return 0 if successful, else the error value of the netcdf-library
-     */
-    int readNetCDF(char *filename) {
+    * readNetCDF will initialize the ids of the nc file and the ids of all
+    * the variables which are being used
+    * 
+    * @param filename the name of the nc-file to be opened
+    * @return 0 if successful, else the error value of the netcdf-library
+    */ 
+     int readNetCDF(char *filename) {
         // error values will be stored in this variable
         int err_val;
         
-        // number of dimensions of the variables 'x' and 'y'
-        int dim_x, dim_y;
+        // number of dimensions of the variables 'x','y' and Time
+        int dim_x, dim_y, dim_time;
         
         
         // open .nc file
@@ -181,28 +86,175 @@ private:
             cerr << nc_strerror(err_val) << endl;
         if(err_val = nc_inq_varid(nc_id, "b",  &b_id ))
             cerr << nc_strerror(err_val) << endl;
+        if(err_val = nc_inq_varid(nc_id, "EndTime", &EndTime_id ))
+            cerr << nc_strerror(err_val) << endl;
         
         // get the number of dimensions contained by 'x' and 'y'
         if(err_val = nc_inq_dimid(nc_id, "x", &dim_x))
             cerr << nc_strerror(err_val) << endl;
         if(err_val = nc_inq_dimid(nc_id, "y", &dim_y))
             cerr << nc_strerror(err_val) << endl;
+        if(err_val = nc_inq_dimid(nc_id, "time", &dim_time))
+            cerr << nc_strerror(err_val) << endl;
+            
+        //get additional informations about the resulution of the x and y axes
+        size_t u0 = 0;
+        size_t u1 = 1;
+        if(err_val = nc_get_var1_float(nc_id, y_id, &u0, &y_start))
+            cerr <<  nc_strerror(err_val) << endl;
+        if(err_val = nc_get_var1_float(nc_id, y_id, &u1, &y_delta))
+            cerr <<  nc_strerror(err_val) << endl;
+        y_delta -= y_start;
+        if(err_val = nc_get_var1_float(nc_id, x_id, &u0, &x_start))
+            cerr <<  nc_strerror(err_val) << endl;
+        if(err_val = nc_get_var1_float(nc_id, x_id, &u1, &x_delta))
+            cerr <<  nc_strerror(err_val) << endl;
+        x_delta -= x_start;
         
         // get length x, y;
         nc_inq_dimlen(nc_id, dim_x, &x_size);
         nc_inq_dimlen(nc_id, dim_y, &y_size);
-        
-        // TODO: read the grid values of the x- and y-axis
-        // nc_get_vara_int(nc_id, x_id, start[], count[], x_coords);
-        // nc_get_vara_int(nc_id, y_id, start[], count[], y_coords);
-        
+        nc_inq_dimlen(nc_id, dim_time, &CP_Number);
+        CP_Number -= 1;   
         return 0;
     };
     
+    float getWaterHeight(float x, float y) { 
+        int err_val;
+        size_t index[3];
+        float result;
+        
+        toGridCoordinates(x, y, &index[1], &index[2]);
+        index[0] = CP_Number;
+        
+        if(err_val = nc_get_var1_float(nc_id, h_id, index, &result))
+            cerr <<  nc_strerror(err_val) << endl;
+        
+        return result;
+    };
     
-    void toGridCoordinates(float x_in, float y_in, int* x_out, int* y_out) {
-        // TODO i think the calculation of getboundarypos is wrong but if this is ment to be right this is quit like this
-        *y_out = (int) y_in+0.5; 
-        *x_out = (int) x_in+0.5;
+    
+    float getBathymetry(float x, float y) {
+        int err_val;
+        size_t index[3];
+        float result;
+        
+        toGridCoordinates(x, y, &index[1], &index[2]);
+        index[0] = CP_Number;
+        
+        if(err_val = nc_get_var1_float(nc_id, b_id, index, &result))
+            cerr <<  nc_strerror(err_val) << endl;
+        
+        return result;
+    };
+    
+    
+    float getVeloc_u(float x, float y) {
+        int err_val;
+        size_t index[3];
+        float h, hu;
+        
+        toGridCoordinates(x, y, &index[1], &index[2]);
+        index[0] = CP_Number;
+        
+        // get the value of 'h'
+        if(err_val = nc_get_var1_float(nc_id, h_id, index, &h))
+            cerr <<  nc_strerror(err_val) << endl;
+        
+        // get the value of 'hu'
+        if(err_val = nc_get_var1_float(nc_id, hu_id, index, &hu))
+            cerr <<  nc_strerror(err_val) << endl;
+        
+        return hu / h;
+    };
+    
+    
+    float getVeloc_v(float x, float y) {
+        int err_val;
+        size_t index[3];
+        float h, hv;
+        
+        toGridCoordinates(x, y, &index[2], &index[1]);
+        index[0] = CP_Number;
+        
+        // get the value of 'h'
+        if(err_val = nc_get_var1_float(nc_id, h_id, index, &h))
+            cerr <<  nc_strerror(err_val) << endl;
+        
+        // get the value of 'hu'
+        if(err_val = nc_get_var1_float(nc_id, hv_id, index, &hv))
+            cerr <<  nc_strerror(err_val) << endl;
+        
+        return hv / h;
+    };
+    
+    // get boundary position  
+    float getBoundaryPos(BoundaryEdge i_edge) {
+        int err_val;
+        float ret;
+        size_t x1 = x_size-1;
+        size_t y1 = y_size-1;
+        size_t u0 = 0;
+        if( i_edge == BND_RIGHT ){
+            if(err_val = nc_get_var1_float(nc_id, x_id, &x1 , &ret))
+                cerr <<  nc_strerror(err_val) << endl;
+            return ret+x_delta/2;
+        }
+        else if( i_edge == BND_TOP ){
+            if(err_val = nc_get_var1_float(nc_id, y_id, &y1, &ret))
+                cerr <<  nc_strerror(err_val) << endl;
+            return ret+y_delta/2;
+        }
+        if( i_edge == BND_LEFT ){
+            if(err_val = nc_get_var1_float(nc_id, x_id, &u0 , &ret))
+                cerr <<  nc_strerror(err_val) << endl;
+            return ret-x_delta/2;
+        }
+        else if( i_edge == BND_BOTTOM ){
+            if(err_val = nc_get_var1_float(nc_id, y_id, &u0, &ret))
+                cerr <<  nc_strerror(err_val) << endl;
+            return ret-y_delta/2;
+        }
+              
+
+    };
+    
+    float endSimulation() {
+    int err_val;
+    float ret;
+    if(err_val = nc_get_var1_float(nc_id, EndTime_id, 0, &ret))
+        cerr <<  nc_strerror(err_val) << endl;
+    return ret;    
+    }
+    BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
+    
+    
+private:
+    // Check point Number
+    size_t CP_Number;
+    // file id
+    int nc_id;
+    
+    // variable ids
+    int x_id, y_id, h_id, hu_id, hv_id, b_id, Bound_id, EndTime_id;
+    
+    // needed to make tho fitting of the requested coordinates to the grid
+    float x_start, x_delta, y_start, y_delta;
+    
+    // float x0, y0;
+    size_t x_size, y_size;
+    
+    //gets the nerest data point  for (x_in,y_in) and writes the values of this datapoint to x_out y_out
+    void toGridCoordinates(float x_in, float y_in, size_t* x_out, size_t* y_out) {
+        *y_out = (size_t) (((y_in-y_start)/y_delta)+0.5f); 
+        *x_out = (size_t) (((x_in-x_start)/x_delta)+0.5f);
+        if(*x_out<0)
+            *x_out=0;
+        if(*y_out < 0)
+            *y_out = 0;
+        if(*x_out >= x_size)
+            *x_out = x_size-1;
+        if(*y_out >=y_size)
+            *y_out = y_size-1;
     };
 };
