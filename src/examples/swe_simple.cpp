@@ -42,7 +42,7 @@
 #endif
 
 #ifdef WRITENETCDF
-#include "writer/NetCdfWriter.hh"
+#include "writer/NetCdfWriterCP.hh"
 #else
 #include "writer/VtkWriter.hh"
 #endif
@@ -227,8 +227,8 @@ int main( int argc, char** argv ) {
 		  l_wavePropgationBlock.getBathymetry(),
 		  l_boundarySize,
 		  l_nX, l_nY,
-		  l_dX, l_dY,
-		  l_originX, l_originY);
+		  l_dX, l_dY, l_endSimulation,
+		  l_originX, l_originY,0);
 #else
   // consturct a VtkWriter
   io::VtkWriter l_writer( l_fileName,
