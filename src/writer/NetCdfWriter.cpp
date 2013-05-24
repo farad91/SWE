@@ -50,19 +50,21 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 		const Float2D &i_b,
 		const BoundarySize &i_boundarySize,
 		int i_nX, int i_nY,
-		float i_dX, float i_dY,
-		float i_originX, float i_originY, float ETime,
+		float i_dX, float i_dY, float ETime,
 		bool newfile,
+		float i_originX, float i_originY, 
 		unsigned int i_flush) :
 		//const bool  &i_dynamicBathymetry) : //!TODO
   io::Writer(i_baseName + ".nc", i_b, i_boundarySize, i_nX, i_nY),
   flush(i_flush)
-{
+{   
+    EndTime = ETime;
     if(newfile){
 	    int status;
 
 	    //create a netCDF-file, an existing file will be replaced
 	    status = nc_create(fileName.c_str(), NC_NETCDF4, &dataFile);
+	    status = nc_create(("CP_"+fileName).c_str(), NC_NETCDF4, &checkFile);
 
       //check if the netCDF-file creation constructor succeeded.
 	    if (status != NC_NOERR) {
@@ -79,11 +81,12 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
     #endif
 
 	    //dimensions
-	    int l_timeDim, l_xDim, l_yDim, l_bDim;
+	    int l_timeDim, l_xDim, l_yDim, l_boundDim;
 	    nc_def_dim(dataFile, "time", NC_UNLIMITED, &l_timeDim);
 	    nc_def_dim(dataFile, "x", nX, &l_xDim);
 	    nc_def_dim(dataFile, "y", nY, &l_yDim);
-	    l_bDim = 4;
+	    // for checkfile
+	    nc_def_dim(checkFile, "bound", 4, &l_boundDim);
 
 	    //variables (TODO: add rest of CF-1.5)
 	    int l_xVar, l_yVar;
@@ -101,10 +104,11 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 	    nc_def_var(dataFile, "hu", NC_FLOAT, 3, dims, &huVar);
 	    nc_def_var(dataFile, "hv", NC_FLOAT, 3, dims, &hvVar);
 	    nc_def_var(dataFile, "b",  NC_FLOAT, 2, &dims[1], &bVar);
-        nc_def_var(dataFile, "EndTime", NC_FLOAT,0,dims, &EndTimeVar);
-        nc_def_var(dataFile, "BoundType", NC_STRING,1,&l_bDim, &BoundVar);
+	    // for check file
+        nc_def_var(checkFile, "EndTimeu", NC_FLOAT,0,dims, &EndTimeVar);
+        nc_def_var(checkFile, "BoundType", NC_FLOAT,1,&l_boundDim, &BoundVar);
         
-        nc_put_var_float(dataFile,EndTimeVar,&ETime);
+        nc_put_var_float(checkFile,EndTimeVar,&ETime);
 	    //set attributes to match CF-1.5 convention
 	    ncPutAttText(NC_GLOBAL, "Conventions", "CF-1.5");
 	    ncPutAttText(NC_GLOBAL, "title", "Computed tsunami solution");
@@ -132,7 +136,7 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
     else{
         // if an existing file needs to be continued
         // open .nc file
-        nc_open(i_baseName + ".nc", NC_NOWRITE, &dataFile);
+        nc_open(fileName.c_str(), NC_NOWRITE, &dataFile);
         
         // get the variables IDs 
         //nc_inq_varid(dataFile, "x",  &l_xVar );
@@ -149,7 +153,8 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
  * Destructor of a netCDF-writer.
  */
 io::NetCdfWriter::~NetCdfWriter() {
-	nc_close(dataFile);
+	
+    nc_close(dataFile);
 }
 
 /**
@@ -203,7 +208,7 @@ void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
 				&i_matrix[col+boundarySize[0]][boundarySize[2]]); //write col
   }
 }
-
+//TODO void writeBoundary conditiones ( type cast and transltion tabel to int or som tihng like that
 /**
  * Writes the unknwons to a netCDF-file (-> constructor) with respect to the boundary sizes.
  *
@@ -240,7 +245,12 @@ void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
 
 	// Increment timeStep for next call
 	timeStep++;
-
-	if ((flush > 0 && timeStep % flush == 0))
+	
+	if(i_time > (EndTime-1)){
+	    nc_close(checkFile);
+	    std::remove(("CP_"+fileName).c_str());
+	    }
+	if (flush > 0 && timeStep % flush == 0)
 		nc_sync(dataFile);
+		
 }

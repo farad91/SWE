@@ -42,7 +42,7 @@
 #endif
 
 #ifdef WRITENETCDF
-#include "writer/NetCdfWriterCP.hh"
+#include "writer/NetCdfWriter.hh"
 #else
 #include "writer/VtkWriter.hh"
 #endif
@@ -55,6 +55,7 @@
 #else
 #ifdef TSUNAMINC
 #include "scenarios/SWE_TsunamiScenario.hh"
+#include "scenarios/SWE_NetCDFCheckpointScenario.hh"
 #else
 #include "scenarios/SWE_simple_scenarios.hh"
 #endif
@@ -148,6 +149,7 @@ int main( int argc, char** argv ) {
                                 ASAGI_INPUT_DIR "tohoku_gebco_ucsb3_500m_hawaii_displ.nc",
                                 (float) 28800., simulationArea);
   #else
+  std::string l_fileName = generateBaseFileName(l_baseName,0,0);
   // create a simple artificial scenario
   #ifdef PARTIALDAMBREAK
   SWE_DamBreakScenario l_scenario;
@@ -156,8 +158,22 @@ int main( int argc, char** argv ) {
   SWE_ArtificialTsunamiScenario l_scenario;
   #else
   #ifdef TSUNAMINC
-  SWE_TsunamiScenario l_scenario;
-  l_scenario.readNetCDF(argv[4],argv[5]);
+  bool CPFile = false;
+  char mode = 'r';
+  FILE* f = fopen(("CP_"+l_baseName+"_00.nc").c_str(),&mode);
+  if(f != NULL){
+    fclose(f);
+    CPFile = true;
+  }
+  if(!CPFile){
+    SWE_TsunamiScenario l_scenario;
+    l_scenario.readNetCDF(argv[4],argv[5]);
+  }
+  else{
+    SWE_NetCDFCheckpointScenario l_scenario;
+    char* datas = "test_00.nc";
+    l_scenario.readNetCDF(datas);
+  }
   #else
   SWE_RadialDamBreakScenario l_scenario;
   #endif
@@ -218,16 +234,26 @@ int main( int argc, char** argv ) {
   tools::Logger::logger.printOutputTime((float) 0.);
   progressBar.update(0.);
 
-  std::string l_fileName = generateBaseFileName(l_baseName,0,0);
+  
   //boundary size of the ghost layers
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
+#ifdef CPSCEN
+    //TODO
+
+    io::NetCdfWriter l_writer( l_fileName,
+		  l_wavePropgationBlock.getBathymetry(),
+		  l_boundarySize,
+		  l_nX, l_nY,
+		  l_dX, l_dY, l_endSimulation, 'true',
+		  l_originX, l_originY,0);
+#else
 #ifdef WRITENETCDF
   //construct a NetCdfWriter
   io::NetCdfWriter l_writer( l_fileName,
 		  l_wavePropgationBlock.getBathymetry(),
 		  l_boundarySize,
 		  l_nX, l_nY,
-		  l_dX, l_dY, l_endSimulation,
+		  l_dX, l_dY, l_endSimulation, 'false',
 		  l_originX, l_originY,0);
 #else
   // consturct a VtkWriter
@@ -243,7 +269,7 @@ int main( int argc, char** argv ) {
                           l_wavePropgationBlock.getDischarge_hv(),
                           (float) 0.);
 
-
+#endif
   /**
    * Simulation.
    */
@@ -253,7 +279,11 @@ int main( int argc, char** argv ) {
   tools::Logger::logger.initWallClockTime(time(NULL));
 
   //! simulation time.
+#ifdef CPSCEN
+    float l_t = //TODO
+#else
   float l_t = 0.0;
+#endif
   progressBar.update(l_t);
 
   unsigned int l_iterations = 0;

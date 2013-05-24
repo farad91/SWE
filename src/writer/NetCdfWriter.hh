@@ -54,10 +54,10 @@ namespace io {
 class io::NetCdfWriter : public io::Writer {
 private:
     /** netCDF file id*/
-    int dataFile;
+    int dataFile, checkFile;
 
     /** Variable ids */
-    int timeVar, hVar, huVar, hvVar, bVar, BoundVar, EndTimeVar;
+    int timeVar, hVar, huVar, hvVar, bVar, BoundVar, EndTimeVar, EndTime;
 
     /** Flush after every x write operation? */
     unsigned int flush;
@@ -76,9 +76,9 @@ private:
     			 const Float2D &i_b,
                  const BoundarySize &i_boundarySize,
                  int i_nX, int i_nY,
-                 float i_dX, float i_dY, 
-                 float i_originX = 0., float i_originY = 0., float ETime,
-		         bool newfile = false,
+                 float i_dX, float i_dY, float ETime,
+		         bool newfile = false, 
+                 float i_originX = 0., float i_originY = 0., 
                  unsigned int i_flush = 0);
     virtual ~NetCdfWriter();
 

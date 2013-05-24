@@ -215,6 +215,7 @@ public:
                 cerr <<  nc_strerror(err_val) << endl;
             return ret-y_delta/2;
         }
+        return 0;
               
 
     };
