@@ -260,7 +260,7 @@ int main( int argc, char** argv ) {
 		  l_wavePropgationBlock.getBathymetry(),
 		  l_boundarySize,
 		  l_nX, l_nY,
-		  l_dX, l_dY, l_endSimulation, 'false',
+		  l_dX, l_dY, l_endSimulation, false,
 		  l_originX, l_originY,0);
 #else
   // consturct a VtkWriter
