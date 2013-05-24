@@ -178,7 +178,8 @@ int main( int argc, char** argv ) {
     SWE_NetCDFCheckpointScenario sen;
     l_scenario = sen;
     char* datas = "test_00.nc";
-    l_scenario.readNetCDF(datas);
+    char* datascp = "CP_test_00.nc";
+    l_scenario.readNetCDF(datas,datascp);
     //l_scenario = scenario;
   } 
   #else
