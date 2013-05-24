@@ -158,6 +158,7 @@ int main( int argc, char** argv ) {
   SWE_ArtificialTsunamiScenario l_scenario;
   #else
   #ifdef TSUNAMINC
+  // TODO make ues of file name in stead of "_00" and use it for datas t00 
   bool CPFile = false;
   char mode = 'r';
   FILE* f = fopen(("CP_"+l_baseName+"_00.nc").c_str(),&mode);
