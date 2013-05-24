@@ -158,7 +158,7 @@ int main( int argc, char** argv ) {
   SWE_ArtificialTsunamiScenario l_scenario;
   #else
   #ifdef TSUNAMINC
-  // TODO make ues of file name in stead of "_00" and use it for datas t00 
+  // TODO make ues of file name in stead of "_00" and use it for datas t00  
   bool CPFile = false;
   char mode = 'r';
   FILE* f = fopen(("CP_"+l_baseName+"_00.nc").c_str(),&mode);
@@ -166,15 +166,19 @@ int main( int argc, char** argv ) {
     fclose(f);
     CPFile = true;
   }
+  //SWE_Scenario l_scenario;
   if(!CPFile){
     SWE_TsunamiScenario l_scenario;
     l_scenario.readNetCDF(argv[4],argv[5]);
+    //l_scenario = scenario;
   }
   else{
     SWE_NetCDFCheckpointScenario l_scenario;
     char* datas = "test_00.nc";
     l_scenario.readNetCDF(datas);
+    //l_scenario = scenario;
   }
+  
   #else
   SWE_RadialDamBreakScenario l_scenario;
   #endif
