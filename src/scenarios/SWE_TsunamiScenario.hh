@@ -25,7 +25,7 @@
  * TODO
  */
 
-#include "SWE_Scenario.hh"
+#include "SWE_NetCDFScenario.hh"
 
 #include <netcdf.h>
 
@@ -36,7 +36,7 @@
 using namespace std;
 
 
-class SWE_TsunamiScenario : public SWE_Scenario {
+class SWE_TsunamiScenario : public SWE_NetCDFScenario {
     
 public:
     

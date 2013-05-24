@@ -25,7 +25,7 @@
  * TODO
  */
 
-#include "SWE_Scenario.hh"
+#include "SWE_NetCDFScenario.hh"
 
 #include <netcdf.h>
 
@@ -35,7 +35,7 @@
 using namespace std;
 
 
-class SWE_NetCDFCheckpointScenario : public SWE_Scenario {
+class SWE_NetCDFCheckpointScenario : public SWE_NetCDFScenario {
     
 public:
     
@@ -59,7 +59,7 @@ public:
     * @param filename the name of the nc-file to be opened
     * @return 0 if successful, else the error value of the netcdf-library
     */ 
-     int readNetCDF(char *filename) {
+     int readNetCDF(char *filename,char *CPFile) {
         // error values will be stored in this variable
         int err_val;
         

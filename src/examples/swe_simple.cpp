@@ -56,6 +56,7 @@
 #ifdef TSUNAMINC
 #include "scenarios/SWE_TsunamiScenario.hh"
 #include "scenarios/SWE_NetCDFCheckpointScenario.hh"
+#include "scenarios/SWE_NetCDFScenario.hh"
 #else
 #include "scenarios/SWE_simple_scenarios.hh"
 #endif
@@ -166,19 +167,20 @@ int main( int argc, char** argv ) {
     fclose(f);
     CPFile = true;
   }
-  //SWE_Scenario l_scenario;
+  SWE_NetCDFScenario l_scenario;
   if(!CPFile){
-    SWE_TsunamiScenario l_scenario;
+    SWE_TsunamiScenario sen;
+    l_scenario = sen;
     l_scenario.readNetCDF(argv[4],argv[5]);
     //l_scenario = scenario;
   }
   else{
-    SWE_NetCDFCheckpointScenario l_scenario;
+    SWE_NetCDFCheckpointScenario sen;
+    l_scenario = sen;
     char* datas = "test_00.nc";
     l_scenario.readNetCDF(datas);
     //l_scenario = scenario;
-  }
-  
+  } 
   #else
   SWE_RadialDamBreakScenario l_scenario;
   #endif
