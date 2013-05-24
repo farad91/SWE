@@ -72,6 +72,10 @@ public:
             cerr << nc_strerror(err_val) << endl;
             return err_val;
         }
+          if(err_val = nc_open(CPFile, NC_NOWRITE, &cp_id)) {
+            cerr << nc_strerror(err_val) << endl;
+            return err_val;
+        }
         
         // get the variables IDs 
         if(err_val = nc_inq_varid(nc_id, "x",  &x_id ))
@@ -86,7 +90,7 @@ public:
             cerr << nc_strerror(err_val) << endl;
         if(err_val = nc_inq_varid(nc_id, "b",  &b_id ))
             cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_varid(nc_id, "EndTime", &EndTime_id ))
+        if(err_val = nc_inq_varid(cp_id, "EndTime", &EndTime_id ))
             cerr << nc_strerror(err_val) << endl;
         
         // get the number of dimensions contained by 'x' and 'y'
@@ -223,10 +227,11 @@ public:
     float endSimulation() {
     int err_val;
     float ret;
-    if(err_val = nc_get_var1_float(nc_id, EndTime_id, 0, &ret))
+    if(err_val = nc_get_var1_float(cp_id, EndTime_id, 0, &ret))
         cerr <<  nc_strerror(err_val) << endl;
     return ret;    
     }
+    //TODO
     BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
     
     
@@ -234,7 +239,7 @@ private:
     // Check point Number
     size_t CP_Number;
     // file id
-    int nc_id;
+    int nc_id, cp_id;
     
     // variable ids
     int x_id, y_id, h_id, hu_id, hv_id, b_id, Bound_id, EndTime_id;

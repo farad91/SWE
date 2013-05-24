@@ -87,6 +87,7 @@ private:
                         const Float2D &i_hu,
                         const Float2D &i_hv,
                         float i_time);
+    void writeBoundary(char* up, char* bottom, char* left, char* right);
 
   private:
     /**

@@ -109,6 +109,7 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
         nc_def_var(checkFile, "BoundType", NC_FLOAT,1,&l_boundDim, &BoundVar);
         
         nc_put_var_float(checkFile,EndTimeVar,&ETime);
+        nc_sync(checkFile);
 	    //set attributes to match CF-1.5 convention
 	    ncPutAttText(NC_GLOBAL, "Conventions", "CF-1.5");
 	    ncPutAttText(NC_GLOBAL, "title", "Computed tsunami solution");
@@ -209,6 +210,11 @@ void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
   }
 }
 //TODO void writeBoundary conditiones ( type cast and transltion tabel to int or som tihng like that
+void io::NetCdfWriter::writeBoundary(char* up, char* bottom, char* left, char* right) {
+    
+		//nc_put_var_string(checkFile,BoundVar,up); //write col
+  
+}
 /**
  * Writes the unknwons to a netCDF-file (-> constructor) with respect to the boundary sizes.
  *
@@ -245,6 +251,7 @@ void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
 
 	// Increment timeStep for next call
 	timeStep++;
+	
 	
 	if(i_time > (EndTime-1)){
 	    nc_close(checkFile);

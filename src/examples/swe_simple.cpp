@@ -159,7 +159,7 @@ int main( int argc, char** argv ) {
   SWE_ArtificialTsunamiScenario l_scenario;
   #else
   #ifdef TSUNAMINC
-  // TODO make ues of file name in stead of "_00" and use it for datas t00  
+   
   bool CPFile = false;
   char mode = 'r';
   FILE* f = fopen(("CP_"+l_baseName+"_00.nc").c_str(),&mode);
@@ -167,21 +167,26 @@ int main( int argc, char** argv ) {
     fclose(f);
     CPFile = true;
   }
-  SWE_NetCDFScenario l_scenario;
+  /*
+  // TODO make ues of file name in stead of "_00" and use it for datas t00 make that fuking decide running what type our l-scenario is 
+  SWE_NetCDFScenario l_scenario = NULL;
   if(!CPFile){
-    SWE_TsunamiScenario sen;
-    l_scenario = sen;
+    //SWE_TsunamiScenario sen;
+    l_scenario = SWE_TsunamiScenario();
     l_scenario.readNetCDF(argv[4],argv[5]);
     //l_scenario = scenario;
   }
   else{
-    SWE_NetCDFCheckpointScenario sen;
-    l_scenario = sen;
+    //SWE_NetCDFCheckpointScenario sen;
+    l_scenario = SWE_NetCDFCheckpointScenario();
     char* datas = "test_00.nc";
     char* datascp = "CP_test_00.nc";
     l_scenario.readNetCDF(datas,datascp);
     //l_scenario = scenario;
-  } 
+  }*/
+  //TODO Remove and integreat in above
+  SWE_TsunamiScenario l_scenario;
+  l_scenario.readNetCDF(argv[4],argv[5]);
   #else
   SWE_RadialDamBreakScenario l_scenario;
   #endif
@@ -223,7 +228,11 @@ int main( int argc, char** argv ) {
 
   //! time when the simulation ends.
   #ifdef TSUNAMINC
+  if(!CPFile){
   float l_endSimulation = atoi(argv[6]);
+  }
+  else
+    float l_endSimulation = l_scenario.endSimulation();
   #else
   float l_endSimulation = l_scenario.endSimulation();
   #endif
@@ -245,24 +254,29 @@ int main( int argc, char** argv ) {
   
   //boundary size of the ghost layers
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
-#ifdef CPSCEN
-    //TODO
-
+#ifdef WRITENETCDf
+if(CPFile){
     io::NetCdfWriter l_writer( l_fileName,
-		  l_wavePropgationBlock.getBathymetry(),
-		  l_boundarySize,
-		  l_nX, l_nY,
-		  l_dX, l_dY, l_endSimulation, 'true',
-		  l_originX, l_originY,0);
-#else
-#ifdef WRITENETCDF
-  //construct a NetCdfWriter
-  io::NetCdfWriter l_writer( l_fileName,
 		  l_wavePropgationBlock.getBathymetry(),
 		  l_boundarySize,
 		  l_nX, l_nY,
 		  l_dX, l_dY, l_endSimulation, false,
 		  l_originX, l_originY,0);
+}
+else{
+  //construct a NetCdfWriter
+  io::NetCdfWriter l_writer( l_fileName,
+		  l_wavePropgationBlock.getBathymetry(),
+		  l_boundarySize,
+		  l_nX, l_nY,
+		  l_dX, l_dY, l_endSimulation, true, // TODO auch wenn du meinst ' ist falsch bei mir geht es ohne nicht
+		  l_originX, l_originY,0);
+  // Write zero time step
+  l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
+                          l_wavePropgationBlock.getDischarge_hu(),
+                          l_wavePropgationBlock.getDischarge_hv(),
+                          (float) 0.);
+  }
 #else
   // consturct a VtkWriter
   io::VtkWriter l_writer( l_fileName,
@@ -270,14 +284,16 @@ int main( int argc, char** argv ) {
 		  l_boundarySize,
 		  l_nX, l_nY,
 		  l_dX, l_dY );
-#endif
-  // Write zero time step
+		  
+      // Write zero time step
   l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                           l_wavePropgationBlock.getDischarge_hu(),
                           l_wavePropgationBlock.getDischarge_hv(),
                           (float) 0.);
-
 #endif
+
+
+
   /**
    * Simulation.
    */
@@ -287,17 +303,23 @@ int main( int argc, char** argv ) {
   tools::Logger::logger.initWallClockTime(time(NULL));
 
   //! simulation time.
-#ifdef CPSCEN
-    float l_t = //TODO
+#ifdef WRITENETCDf
+    float l_t;
+    if(CPFile)
+        l_t = 4.;//TODO
+        int c_h = 5;//TODO
+    else
+        l_t = 0.0;
 #else
   float l_t = 0.0;
+  int c_h =1;
 #endif
   progressBar.update(l_t);
 
   unsigned int l_iterations = 0;
 
   // loop over checkpoints
-  for(int c=1; c<=l_numberOfCheckPoints; c++) {
+  for(int c=c_h; c<=l_numberOfCheckPoints; c++) {
 
     // do time steps until next checkpoint is reached
     while( l_t < l_checkPoints[c] ) {
