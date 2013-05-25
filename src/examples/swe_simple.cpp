@@ -127,6 +127,10 @@ int main( int argc, char** argv ) {
   l_xmlConfig.loadConfig(l_xmlFile.c_str());
   #endif
 
+  //! true if checkpoint file exists
+  bool checkpoint = false;
+  
+  
   #ifdef ASAGI
   /* Information about the example bathymetry grid (tohoku_gebco_ucsb3_500m_hawaii_bath.nc):
    *
@@ -159,18 +163,19 @@ int main( int argc, char** argv ) {
   SWE_ArtificialTsunamiScenario l_scenario;
   #else
   #ifdef TSUNAMINC
-   
-  bool CPFile = false;
-  char mode = 'r';
-  FILE* f = fopen(("CP_"+l_baseName+"_00.nc").c_str(),&mode);
-  if(f != NULL){
-    fclose(f);
-    CPFile = true;
-  }
+  
+  // check if checkpoint file is existing
+  ofstream cp_file;
+  // try to open the checkpoint file
+  savefile.open("CP_" + l_baseName + "_00.nc");
+  // check for errors when opening the file
+  checkpoint = cp_file.good();
+  cp_file.close();
+  
   /*
   // TODO make ues of file name in stead of "_00" and use it for datas t00 make that fuking decide running what type our l-scenario is 
   SWE_NetCDFScenario l_scenario = NULL;
-  if(!CPFile){
+  if(!checkpoint){
     //SWE_TsunamiScenario sen;
     l_scenario = SWE_TsunamiScenario();
     l_scenario.readNetCDF(argv[4],argv[5]);
@@ -185,6 +190,7 @@ int main( int argc, char** argv ) {
     //l_scenario = scenario;
   }*/
   //TODO Remove and integreat in above
+  
   SWE_TsunamiScenario l_scenario;
   l_scenario.readNetCDF(argv[4],argv[5]);
   #else
@@ -228,11 +234,10 @@ int main( int argc, char** argv ) {
 
   //! time when the simulation ends.
   #ifdef TSUNAMINC
-  if(!CPFile){
-  float l_endSimulation = atoi(argv[6]);
-  }
-  else
-    float l_endSimulation = l_scenario.endSimulation();
+  float l_endSimulation;
+  
+  if(!checkpoint) l_endSimulation = atoi(argv[6]);
+  else            l_endSimulation = l_scenario.endSimulation();
   #else
   float l_endSimulation = l_scenario.endSimulation();
   #endif
@@ -254,44 +259,31 @@ int main( int argc, char** argv ) {
   
   //boundary size of the ghost layers
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
-#ifdef WRITENETCDf
-if(CPFile){
-    io::NetCdfWriter l_writer( l_fileName,
-		  l_wavePropgationBlock.getBathymetry(),
-		  l_boundarySize,
-		  l_nX, l_nY,
-		  l_dX, l_dY, l_endSimulation, false,
-		  l_originX, l_originY,0);
-}
-else{
-  //construct a NetCdfWriter
+#ifdef WRITENETCDF
   io::NetCdfWriter l_writer( l_fileName,
-		  l_wavePropgationBlock.getBathymetry(),
-		  l_boundarySize,
-		  l_nX, l_nY,
-		  l_dX, l_dY, l_endSimulation, true, // TODO auch wenn du meinst ' ist falsch bei mir geht es ohne nicht
-		  l_originX, l_originY,0);
-  // Write zero time step
-  l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
-                          l_wavePropgationBlock.getDischarge_hu(),
-                          l_wavePropgationBlock.getDischarge_hv(),
-                          (float) 0.);
-  }
+                             l_wavePropgationBlock.getBathymetry(),
+                             l_boundarySize,
+                             l_nX, l_nY,
+                             l_dX, l_dY, l_endSimulation, !checkpoint,
+                             l_originX, l_originY,0);
+  
 #else
   // consturct a VtkWriter
   io::VtkWriter l_writer( l_fileName,
-		  l_wavePropgationBlock.getBathymetry(),
-		  l_boundarySize,
-		  l_nX, l_nY,
-		  l_dX, l_dY );
-		  
-      // Write zero time step
-  l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
-                          l_wavePropgationBlock.getDischarge_hu(),
-                          l_wavePropgationBlock.getDischarge_hv(),
-                          (float) 0.);
+                          l_wavePropgationBlock.getBathymetry(),
+                          l_boundarySize,
+                          l_nX, l_nY,
+                          l_dX, l_dY );
+  
 #endif
-
+  
+  if(!checkpoint) {
+    // Write zero time step if we do not load from a checkpoint file
+    l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
+                            l_wavePropgationBlock.getDischarge_hu(),
+                            l_wavePropgationBlock.getDischarge_hv(),
+                            0.f);
+  }
 
 
   /**
@@ -303,16 +295,16 @@ else{
   tools::Logger::logger.initWallClockTime(time(NULL));
 
   //! simulation time.
-#ifdef WRITENETCDf
-    float l_t;
-    if(CPFile)
-        l_t = 4.;//TODO
-        int c_h = 5;//TODO
-    else
-        l_t = 0.0;
-#else
   float l_t = 0.0;
-  int c_h =1;
+  //! number of checkpoints that are already passed
+  int   c_h = 1;
+  
+#ifdef WRITENETCDF
+  if(checkpoint) {
+    // TODO this is just testing so far
+    l_t = 4.f;
+    c_h = 5;
+  }
 #endif
   progressBar.update(l_t);
 
@@ -333,6 +325,7 @@ else{
       // TODO: This calculation should be replaced by the usage of the wave speeds occuring during the flux computation
       // Remark: The code is executed on the CPU, therefore a "valid result" depends on the CPU-GPU-synchronization.
 //      l_wavePropgationBlock.computeMaxTimestep();
+      
       #ifdef RUNTIMESTEP
       l_wavePropgationBlock.runTimestep();
       float l_maxTimeStepWidth = l_wavePropgationBlock.getMaxTimestep();
@@ -346,6 +339,7 @@ else{
       // update the cell values
       l_wavePropgationBlock.updateUnknowns(l_maxTimeStepWidth);
       #endif
+      
       // update the cpu time in the logger
       tools::Logger::logger.updateCpuTime();
 
