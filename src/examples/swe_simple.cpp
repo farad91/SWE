@@ -30,6 +30,7 @@
 #include <cstdlib>
 #include <string>
 #include <iostream>
+#include <fstream>
 
 #ifdef DIMSPLIT
 #include "blocks/SWE_DimensionalSplitting.hh"
@@ -165,9 +166,10 @@ int main( int argc, char** argv ) {
   #ifdef TSUNAMINC
   
   // check if checkpoint file is existing
-  ofstream cp_file;
+  ifstream cp_file;
+  string cp_file_name = "CP_" + l_baseName + "_00.nc";
   // try to open the checkpoint file
-  savefile.open("CP_" + l_baseName + "_00.nc");
+  cp_file.open(cp_file_name.c_str(), ifstream::out);
   // check for errors when opening the file
   checkpoint = cp_file.good();
   cp_file.close();
