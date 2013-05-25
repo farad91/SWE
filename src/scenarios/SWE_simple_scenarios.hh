@@ -221,7 +221,7 @@ class SWE_DamBreakScenario : public SWE_Scenario {
             return (5.f); 
     };
 
-    virtual float endSimulation() { return (float) 15; };
+    virtual float endSimulation() { return 40.f; };
 
     virtual BoundaryType getBoundaryType(BoundaryEdge edge) { 
     if ( edge == BND_RIGHT) 
