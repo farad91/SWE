@@ -199,28 +199,29 @@ class SWE_SplashingConeScenario : public SWE_Scenario {
 
     virtual BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW; };
 };
-/* Dambreak Scenario from the worksheet 2 exercise 4
- *
+
+/*
+ * Dambreak Scenario from the worksheet 2 exercise 4
  */
 class SWE_DamBreakScenario : public SWE_Scenario {
 
   public:
 
     float getBathymetry(float x, float y) {
-       if(x <= 102.5f && x >= 97.5f && (y <= 95.f || y>= 170.f))
+      if(x <= 102.5f && x >= 97.5f && (y <= 95.f || y >= 170.f))
         return 0.f;
-       else
-       return -10.f;
+      else
+        return -10.f;
     };
 
     float getWaterHeight(float x, float y) {
         if(x < 97.5f)
-            return (5.f);
+            return (10.f);
         else 
-            return (20.f); 
+            return (5.f); 
     };
 
-	virtual float endSimulation() { return (float) 15; };
+    virtual float endSimulation() { return (float) 15; };
 
     virtual BoundaryType getBoundaryType(BoundaryEdge edge) { 
     if ( edge == BND_RIGHT) 
