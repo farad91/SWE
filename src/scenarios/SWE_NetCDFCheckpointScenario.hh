@@ -131,7 +131,8 @@ public:
         toGridCoordinates(x, y, &index[1], &index[2]);
         index[0] = CP_Number;
         
-        if(err_val = nc_get_var1_float(nc_id, h_id, index, &result))
+        err_val = nc_get_var1_float(nc_id, h_id, index, &result);
+        if( err_val )
             cerr <<  nc_strerror(err_val) << endl;
         
         return result;
@@ -146,7 +147,8 @@ public:
         toGridCoordinates(x, y, &index[1], &index[2]);
         index[0] = CP_Number;
         
-        if(err_val = nc_get_var1_float(nc_id, b_id, index, &result))
+        err_val = nc_get_var1_float(nc_id, b_id, index, &result);
+        if( err_val )
             cerr <<  nc_strerror(err_val) << endl;
         
         return result;
@@ -162,11 +164,13 @@ public:
         index[0] = CP_Number;
         
         // get the value of 'h'
-        if(err_val = nc_get_var1_float(nc_id, h_id, index, &h))
+        err_val = nc_get_var1_float(nc_id, h_id, index, &h);
+        if( err_val )
             cerr <<  nc_strerror(err_val) << endl;
         
         // get the value of 'hu'
-        if(err_val = nc_get_var1_float(nc_id, hu_id, index, &hu))
+        err_val = nc_get_var1_float(nc_id, hu_id, index, &hu);
+        if( err_val )
             cerr <<  nc_strerror(err_val) << endl;
         
         return hu / h;
@@ -182,11 +186,13 @@ public:
         index[0] = CP_Number;
         
         // get the value of 'h'
-        if(err_val = nc_get_var1_float(nc_id, h_id, index, &h))
+        err_val = nc_get_var1_float(nc_id, h_id, index, &h);
+        if( err_val )
             cerr <<  nc_strerror(err_val) << endl;
         
         // get the value of 'hu'
-        if(err_val = nc_get_var1_float(nc_id, hv_id, index, &hv))
+        err_val = nc_get_var1_float(nc_id, hv_id, index, &hv);
+        if( err_val )
             cerr <<  nc_strerror(err_val) << endl;
         
         return hv / h;
@@ -199,24 +205,24 @@ public:
         size_t x1 = x_size-1;
         size_t y1 = y_size-1;
         size_t u0 = 0;
-        if( i_edge == BND_RIGHT ){
+        if( i_edge == BND_RIGHT ) {
             if(err_val = nc_get_var1_float(nc_id, x_id, &x1 , &ret))
-                cerr <<  nc_strerror(err_val) << endl;
+                cerr << nc_strerror(err_val) << endl;
             return ret+x_delta/2;
         }
-        else if( i_edge == BND_TOP ){
+        else if( i_edge == BND_TOP ) {
             if(err_val = nc_get_var1_float(nc_id, y_id, &y1, &ret))
-                cerr <<  nc_strerror(err_val) << endl;
+                cerr << nc_strerror(err_val) << endl;
             return ret+y_delta/2;
         }
-        if( i_edge == BND_LEFT ){
+        if( i_edge == BND_LEFT ) {
             if(err_val = nc_get_var1_float(nc_id, x_id, &u0 , &ret))
-                cerr <<  nc_strerror(err_val) << endl;
+                cerr << nc_strerror(err_val) << endl;
             return ret-x_delta/2;
         }
-        else if( i_edge == BND_BOTTOM ){
+        else if( i_edge == BND_BOTTOM ) {
             if(err_val = nc_get_var1_float(nc_id, y_id, &u0, &ret))
-                cerr <<  nc_strerror(err_val) << endl;
+                cerr << nc_strerror(err_val) << endl;
             return ret-y_delta/2;
         }
         return 0;
@@ -225,12 +231,16 @@ public:
     };
     
     float endSimulation() {
-    int err_val;
-    float ret;
-    if(err_val = nc_get_var1_float(cp_id, EndTime_id, 0, &ret))
-        cerr <<  nc_strerror(err_val) << endl;
-    return ret;    
+        int err_val;
+        float ret;
+        
+        err_val = nc_get_var1_float(cp_id, EndTime_id, 0, &ret);
+        if( err_val )
+            cerr << nc_strerror(err_val) << endl;
+        
+        return ret;    
     }
+    
     //TODO
     BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
     
