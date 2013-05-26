@@ -300,6 +300,8 @@ private:
         float y_delta, x_delta;
         float y_size,  x_size;
         
+        bool coordinate_valid = true;
+        
         // select the correct data  
         if(source == BATHYMETRY) {
             y_start = y_start_bathy;
@@ -324,22 +326,23 @@ private:
         // check if each of the indices is outside the boundaries
         if(*x_index < 0) {
             *x_index = 0;
-            return false;
+            coordinate_valid = false;
         }
-        if(*x_index >= x_size) {
+        else if(*x_index >= x_size) {
             *x_index = x_size - 1;
-            return false;
-        }
-        if(*y_index < 0) {
-            *y_index = 0;
-            return false;
-        }
-        if(*y_index >= y_size) {
-            *y_index = y_size - 1;
-            return false;
+            coordinate_valid = false;
         }
         
-        return true;
+        if(*y_index < 0) {
+            *y_index = 0;
+            coordinate_valid = false;
+        }
+        else if(*y_index >= y_size) {
+            *y_index = y_size - 1;
+            coordinate_valid = false;
+        }
+        
+        return coordinate_valid;
     };
     
     
