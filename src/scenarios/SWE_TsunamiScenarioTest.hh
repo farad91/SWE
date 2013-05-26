@@ -35,13 +35,13 @@ public:
         float l = test.getBoundaryPos(BND_LEFT);
         float t = test.getBoundaryPos(BND_TOP);
         float b = test.getBoundaryPos(BND_BOTTOM);
-        float bath = test.getPurBathymetry(l,b);
+        float bath = test.getOriginalBathymetry(l,b);
         TS_ASSERT_DELTA(bath,0.f, 0.0f);
-        bath = test.getPurBathymetry(l,t);
+        bath = test.getOriginalBathymetry(l,t);
         TS_ASSERT_DELTA(bath,4.f, 0.0f);
-        bath = test.getPurBathymetry(r,b);
+        bath = test.getOriginalBathymetry(r,b);
         TS_ASSERT_DELTA(bath,45, 0.0f);
-        bath = test.getPurBathymetry(r,t);
+        bath = test.getOriginalBathymetry(r,t);
         TS_ASSERT_DELTA(bath,49.f, 0.0f);
     };
     
@@ -68,7 +68,7 @@ public:
         }
     };
     
-    void testgetPurBathymetry(void){
+    void testgetOriginalBathymetry(void){
         SWE_TsunamiScenario test;
         test.readNetCDF("test.nc","d_test.nc");
         float r = test.getBoundaryPos(BND_RIGHT);
@@ -79,7 +79,7 @@ public:
             float in_x = l + ((r-l)/9)*x;
             for(int y = 0; y < 5; y++){
                 float in_y = b + ((t-b)/4)*y;
-                float bath = test.getPurBathymetry(in_x,in_y);
+                float bath = test.getOriginalBathymetry(in_x,in_y);
                 TS_ASSERT_DELTA(bath,((x*5)+y), 0.0f);
             }
         }
@@ -120,4 +120,21 @@ public:
             }
         }
     };
+    
+    void testtoGridCoordinates(void) {
+        SWE_TsunamiScenario test;
+        test.readNetCDF("test.nc", "d_test.nc");
+        
+        float r = test.getBoundaryPos(BND_RIGHT);
+        float l = test.getBoundaryPos(BND_LEFT);
+        float t = test.getBoundaryPos(BND_TOP);
+        float b = test.getBoundaryPos(BND_BOTTOM);
+        
+        size_t x_index, y_index;
+        TS_ASSERT( test.toGridCoordinates(BATHYMETRY, l, b, &x_index, &y_index) );
+        TS_ASSERT_EQUALS( (signed int) x_index, 0 );
+        TS_ASSERT_EQUALS( (signed int) y_index, 0 );
+        
+    };
 };
+
