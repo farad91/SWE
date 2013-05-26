@@ -360,12 +360,9 @@ private:
         float result;
         
         if(!toGridCoordinates(BATHYMETRY, x, y, &index[0], &index[1])) {
-            cerr << "Warning: bathymetry requested is outside the boundaries of the data!" << endl;
+            /*cerr << "Warning: bathymetry requested is outside the boundaries of the data!" << endl;
             cerr << "x: " << x << '\t' << (signed int) index[0] << endl;
-            cerr << "y: " << y << '\t' << (signed int) index[1] << endl;
-            
-            // bathymetry outside of our data will be handled as landmass with minimum elevation
-            return bath_min_zero_offset;
+            cerr << "y: " << y << '\t' << (signed int) index[1] << endl;*/
         }
         
         err_val = nc_get_var1_float(ncid_bathy, z_id_bathy, index, &result);
