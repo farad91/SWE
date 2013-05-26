@@ -167,7 +167,7 @@ int main( int argc, char** argv ) {
   
   // check if checkpoint file is existing
   ifstream cp_file;
-  string cp_file_name = "CP_" + l_baseName + "_00.nc";
+  string cp_file_name = "CP_" + l_fileName + ".nc";
   // try to open the checkpoint file
   cp_file.open(cp_file_name.c_str(), ifstream::out);
   // check for errors when opening the file
@@ -180,9 +180,7 @@ int main( int argc, char** argv ) {
   l_scenario.readNetCDF(argv[4],argv[5]);
   #else
   SWE_NetCDFCheckpointScenario l_scenario;
-  char* data = const_cast<char*> ((l_baseName + "_00.nc").c_str());
-  char* namecp = const_cast<char*> (cp_file_name.c_str());
-  l_scenario.readNetCDF(data,namecp);
+  l_scenario.readNetCDF((l_fileName + ".nc").c_str(),(cp_file_name.c_str()));
   #endif
   #else
   SWE_RadialDamBreakScenario l_scenario;

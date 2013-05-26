@@ -59,7 +59,7 @@ public:
     * @param filename the name of the nc-file to be opened
     * @return 0 if successful, else the error value of the netcdf-library
     */ 
-     int readNetCDF(char *filename,char *CPFile) {
+     int readNetCDF(const char *filename,const char *CPFile) {
         // error values will be stored in this variable
         int err_val;
         

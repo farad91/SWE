@@ -105,7 +105,7 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 	    nc_def_var(dataFile, "hv", NC_FLOAT, 3, dims, &hvVar);
 	    nc_def_var(dataFile, "b",  NC_FLOAT, 2, &dims[1], &bVar);
 	    // for check file
-        nc_def_var(checkFile, "EndTimeu", NC_FLOAT,0,dims, &EndTimeVar);
+        nc_def_var(checkFile, "EndTime", NC_FLOAT,0,dims, &EndTimeVar);
         nc_def_var(checkFile, "BoundType", NC_FLOAT,1,&l_boundDim, &BoundVar);
         
         nc_put_var_float(checkFile,EndTimeVar,&ETime);
@@ -252,7 +252,7 @@ void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
 	// Increment timeStep for next call
 	timeStep++;
 	
-	
+	nc_sync(dataFile);
 	if(i_time > (EndTime-1)){
 	    nc_close(checkFile);
 	    std::remove(("CP_"+fileName).c_str());
