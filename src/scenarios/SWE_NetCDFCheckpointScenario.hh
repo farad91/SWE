@@ -198,6 +198,17 @@ public:
         return hv / h;
     };
     
+    float getTime() {
+        int err_val;
+        float time;
+        
+        err_val = nc_get_var_float(nc_id, EndTime_id, &time);
+        if( err_val )
+            cerr << nc_strerror(err_val) << endl;
+        
+        return time;
+    }
+    
     // get boundary position  
     float getBoundaryPos(BoundaryEdge i_edge) {
         int err_val;
@@ -226,8 +237,7 @@ public:
             return ret-y_delta/2;
         }
         return 0;
-              
-
+        
     };
     
     float endSimulation() {

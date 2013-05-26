@@ -290,9 +290,9 @@ int main( int argc, char** argv ) {
   
 #ifdef WRITENETCDF
   if(checkpoint) {
-    // TODO this is just testing so far
-    l_t = 6.f;
-    c_h = 5;
+    // initialize time and number of passed checkpoints
+    l_t = l_scenario.getTime();
+    c_h = (l_t / l_endSimulation) * l_numberOfCheckPoints;
   }
 #endif
   progressBar.update(l_t);
