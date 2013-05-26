@@ -132,8 +132,8 @@ public:
         
         size_t x_index, y_index;
         TS_ASSERT( test.toGridCoordinates(BATHYMETRY, l, b, &x_index, &y_index) );
-        TS_ASSERT_EQUALS( (signed int) x_index, 0 );
-        TS_ASSERT_EQUALS( (signed int) y_index, 0 );
+        TS_ASSERT_EQUALS( (signed int) x_index, test.x_size_bathy-1 );
+        TS_ASSERT_EQUALS( (signed int) y_index, test.y_size_bathy-1 );
         
     };
 };
