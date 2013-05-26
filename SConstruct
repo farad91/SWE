@@ -107,6 +107,8 @@ vars.AddVariables(
 
   BoolVariable( 'xmlRuntime', 'use a xml-file for runtime parameters', False ),
   
+  BoolVariable( 'checkPoint', 'load checkpoint files', False ),
+  
   EnumVariable( 'block', 'compile with custom implementation for the SWE_Block', 'default',
                 allowed_values=('default', 'dimsplit')
                 ),
@@ -335,6 +337,9 @@ elif env['scenario'] == 'artiftsunami':
   env.Append(CPPDEFINES=['ARTIFICIAL_TSUNAMI'])
 elif env['scenario'] == 'Tsunami.nc':
   env.Append(CPPDEFINES=['TSUNAMINC'])
+  
+if env['checkPoint'] == True:
+  env.Append(CPPDEFINES=['CHECKPOINT'])
 
 #
 # setup the program name and the build directory
