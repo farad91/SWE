@@ -322,10 +322,22 @@ private:
         *x_index = (size_t) ( ( (x_coord - x_start) / x_delta ) + 0.5f );
         
         // check if each of the indices is outside the boundaries
-        if(*x_index < 0 || *x_index >= x_size)
+        if(*x_index < 0) {
+            *x_index = 0;
             return false;
-        if(*y_index < 0 || *y_index >= y_size)
+        }
+        if(*x_index >= x_size) {
+            *x_index = x_size - 1;
             return false;
+        }
+        if(*y_index < 0) {
+            *y_index = 0;
+            return false;
+        }
+        if(*y_index >= y_size) {
+            *y_index = y_size - 1;
+            return false;
+        }
         
         return true;
     };
@@ -346,6 +358,8 @@ private:
         
         if(!toGridCoordinates(BATHYMETRY, x, y, &index[0], &index[1])) {
             cerr << "Warning: bathymetry requested is outside the boundaries of the data!" << endl;
+            cerr << "x: " << x << '\t' << (signed int) index[0] << endl;
+            cerr << "y: " << y << '\t' << (signed int) index[1] << endl;
             
             // bathymetry outside of our data will be handled as landmass with minimum elevation
             return bath_min_zero_offset;
