@@ -174,27 +174,16 @@ int main( int argc, char** argv ) {
   checkpoint = cp_file.good();
   cp_file.close();
   
-  /*
-  // TODO make ues of file name in stead of "_00" and use it for datas t00 make that fuking decide running what type our l-scenario is 
-  SWE_NetCDFScenario l_scenario = NULL;
-  if(!checkpoint){
-    //SWE_TsunamiScenario sen;
-    l_scenario = SWE_TsunamiScenario();
-    l_scenario.readNetCDF(argv[4],argv[5]);
-    //l_scenario = scenario;
-  }
-  else{
-    //SWE_NetCDFCheckpointScenario sen;
-    l_scenario = SWE_NetCDFCheckpointScenario();
-    char* datas = "test_00.nc";
-    char* datascp = "CP_test_00.nc";
-    l_scenario.readNetCDF(datas,datascp);
-    //l_scenario = scenario;
-  }*/
-  //TODO Remove and integreat in above
-  
+  //TODO try to replace precompiler
+  #ifndef CHECKPOINT
   SWE_TsunamiScenario l_scenario;
   l_scenario.readNetCDF(argv[4],argv[5]);
+  #else
+  SWE_NetCDFCheckpointScenario l_scenario;
+  char* data = const_cast<char*> ((l_baseName + "_00.nc").c_str());
+  char* namecp = const_cast<char*> (cp_file_name.c_str());
+  l_scenario.readNetCDF(data,namecp);
+  #endif
   #else
   SWE_RadialDamBreakScenario l_scenario;
   #endif
@@ -304,7 +293,7 @@ int main( int argc, char** argv ) {
 #ifdef WRITENETCDF
   if(checkpoint) {
     // TODO this is just testing so far
-    l_t = 4.f;
+    l_t = 6.f;
     c_h = 5;
   }
 #endif
