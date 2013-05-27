@@ -60,7 +60,7 @@ public:
         int err_val;
         float result = 0.f;
         size_t index[2];        
-        if(d_toGridCoordinates(x,y,&index[0], &index[1])){
+        if(d_toGridCoordinates(x,y,&index[1], &index[0])){
             if(err_val = nc_get_var1_float(d_nc_id, d_z_id, index, &result))
                 cerr <<  nc_strerror(err_val) << endl;
         }
@@ -103,7 +103,7 @@ public:
         return result;
     };
     
-    BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
+    BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW; };
 
        /**
      * readNetCDF will initialize the ids of the nc file and the ids of all
@@ -238,7 +238,7 @@ private:
         size_t index[2];
         float result;
                 
-        toGridCoordinates(x, y, &index[0], &index[1]);
+        toGridCoordinates(x, y, &index[1], &index[0]);
 
         if(err_val = nc_get_var1_float(nc_id, z_id, index, &result))
             cerr <<  nc_strerror(err_val) << endl;
