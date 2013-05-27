@@ -288,7 +288,7 @@ int main( int argc, char** argv ) {
   //! number of checkpoints that are already passed
   int   c_h = 1;
   
-#ifdef WRITENETCDF
+#ifdef CHECKPOINT
   if(checkpoint) {
     // initialize time and number of passed checkpoints
     l_t = l_scenario.getTime();
