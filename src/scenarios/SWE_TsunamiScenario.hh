@@ -101,11 +101,6 @@ public:
     };
     
     
-    float getVeloc_u(float x, float y) { return 0.0f; };
-    
-    
-    float getVeloc_v(float x, float y) { return 0.0f; };
-    
     /**
      * getBoundaryPos will return the position of the boundary #i_edge
      * on the axis orthogonal to the boundary
