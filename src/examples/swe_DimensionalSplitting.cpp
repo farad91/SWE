@@ -33,13 +33,19 @@
 
 #include "blocks/SWE_DimensionalSplitting.hh"
 
-
-#include "writer/VtkWriter.hh"
-#include "writer/NetCdfWriter.hh"
-
-
-#include "scenarios/SWE_simple_scenarios.hh"
+// input data
+#ifdef TSUNAMINC
 #include "scenarios/SWE_TsunamiScenario.hh"
+#else
+#include "scenarios/SWE_simple_scenarios.hh"
+#endif
+
+// output data
+#ifdef WRITENETCDF
+#include "writer/NetCdfWriter.hh"
+#else
+#include "writer/VtkWriter.hh"
+#endif
 
 
 #include "tools/help.hh"
@@ -53,17 +59,38 @@ int main( int argc, char** argv ) {
   /**
    * Initialization.
    */
+  
+#ifdef TSUNAMINC
+  if(argc != 7 && argc != 8) {
+    std::cout << "Aborting ... please provide proper input parameters." << std::endl
+              << "Example: ./SWE_parallel 200 300 /work/openmp_out bat.nc dis.nc 20" << std::endl
+              << "\tfor a single block of size 200 * 300 and simulation time 20sec" << std::endl
+              << "Custom number of checkpoints (in this case 50):" << std::endl
+              << "Example: ./SWE_parallel 200 300 /work/openmp_out bat.nc dis.nc 20 50" << std::endl;
+    return 1;
+  }
+#else
   // check if the necessary command line input parameters are given
-  if(argc != 6) {
+  if(argc != 4) {
     std::cout << "Aborting ... please provide proper input parameters." << std::endl
               << "Example: ./SWE_parallel 200 300 /work/openmp_out" << std::endl
               << "\tfor a single block of size 200 * 300" << std::endl;
     return 1;
   }
+#endif
 
   //! number of grid cells in x- and y-direction.
   int l_nX, l_nY;
+  
+  //! output file of a previous run is existing?
+  bool checkpoint;
 
+  //! time when the simulation will be stopped (in seconds)
+  float l_endTime;
+  
+  //! number of checkpoints for visualization (at each checkpoint in time, an output file is written).
+  int l_numberOfCheckPoints;
+  
   //! l_baseName of the plots.
   std::string l_baseName;
 
@@ -71,25 +98,45 @@ int main( int argc, char** argv ) {
   l_nY = l_nX = atoi(argv[1]);
   l_nY = atoi(argv[2]);
   l_baseName = std::string(argv[3]);
+  l_endTime  = atoi(argv[6]);
 
+  if(argc == 8)
+    l_numberOfCheckPoints = atoi(argv[7]);
+  else
+    l_numberOfCheckPoints = 20;
 
+  
+#ifdef CHECKPOINT
+  // check if an output/checkpoint file of a previous run is existing
+  ifstream cp_file;
+  string cp_file_name = l_fileName + ".nc";
+  // try to open the checkpoint file
+  cp_file.open(cp_file_name.c_str(), ifstream::out);
+  // check for errors when opening the file
+  checkpoint = cp_file.good();
+  cp_file.close();
+#else
+  // assume that no output file is existing
+  checkpoint = false;
+#endif
+  
+  
+#ifdef TSUNAMINC
+  // load bathymetry (argv[4]) and displacement (argv[5]) from netCDF files
+  SWE_NetCDFScenario *l_scenario = new SWE_TsunamiScenario();
+  l_scenario->readNetCDF(argv[4],argv[5]);
+#else
   // create a simple artificial scenario
-  #ifdef PARTIALDAMBREAK
-  SWE_DamBreakScenario l_scenario;
-  #else
-  SWE_TsunamiScenario l_scenario;
-  l_scenario.readNetCDF(argv[4],argv[5]);
-  #endif
+  SWE_DamBreakScenario *l_scenario = new SWE_DamBreakScenario();
+#endif
 
-  //! number of checkpoints for visualization (at each checkpoint in time, an output file is written).
-  int l_numberOfCheckPoints = 20;
-
+  
   //! size of a single cell in x- and y-direction
   float l_dX, l_dY;
 
   // compute the size of a single cell
-  l_dX = (l_scenario.getBoundaryPos(BND_RIGHT) - l_scenario.getBoundaryPos(BND_LEFT) )/l_nX;
-  l_dY = (l_scenario.getBoundaryPos(BND_TOP) - l_scenario.getBoundaryPos(BND_BOTTOM) )/l_nY;
+  l_dX = (l_scenario->getBoundaryPos(BND_RIGHT) - l_scenario->getBoundaryPos(BND_LEFT)   )/l_nX;
+  l_dY = (l_scenario->getBoundaryPos(BND_TOP) -   l_scenario->getBoundaryPos(BND_BOTTOM) )/l_nY;
 
   // create a single wave propagation block
   SWE_DimensionalSplitting l_wavePropgationBlock(l_nX, l_nY, l_dX, l_dY);
@@ -98,15 +145,16 @@ int main( int argc, char** argv ) {
   float l_originX, l_originY;
 
   // get the origin from the scenario
-  l_originX = l_scenario.getBoundaryPos(BND_LEFT);
-  l_originY = l_scenario.getBoundaryPos(BND_BOTTOM);
+  l_originX = l_scenario->getBoundaryPos(BND_LEFT);
+  l_originY = l_scenario->getBoundaryPos(BND_BOTTOM);
 
+  
   // initialize the wave propagation block
-  l_wavePropgationBlock.initScenario(l_originX, l_originY, l_scenario);
+  l_wavePropgationBlock.initScenario(l_originX, l_originY, *l_scenario);
 
 
   //! time when the simulation ends.
-  float l_endSimulation = l_scenario.endSimulation();
+  float l_endSimulation = l_scenario->endSimulation();
 
   //! checkpoints when output files are written.
   float* l_checkPoints = new float[l_numberOfCheckPoints+1];
@@ -127,12 +175,28 @@ int main( int argc, char** argv ) {
   //boundary size of the ghost layers
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
 
-  // consturct a VtkWriter
+  
+#ifdef WRITENETCDF
+  // construct a NetCdfWriter
+  io::NetCdfWriter l_writer( l_fileName,
+                             l_wavePropgationBlock.getBathymetry(),
+                             l_boundarySize,
+                             l_nX, l_nY,
+                             l_dX, l_dY,
+                             l_endSimulation,
+                             !checkpoint,
+                             l_originX, l_originY,
+                             0
+                           );
+#else
+  // construct a VtkWriter
   io::VtkWriter l_writer( l_fileName,
-		  l_wavePropgationBlock.getBathymetry(),
-		  l_boundarySize,
-		  l_nX, l_nY,
-		  l_dX, l_dY );
+                          l_wavePropgationBlock.getBathymetry(),
+                          l_boundarySize,
+                          l_nX, l_nY,
+                          l_dX, l_dY );
+#endif
+  
   // Write zero time step
   l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                           l_wavePropgationBlock.getDischarge_hu(),
@@ -149,7 +213,7 @@ int main( int argc, char** argv ) {
   tools::Logger::logger.initWallClockTime(time(NULL));
 
   //! simulation time.
-  float l_t = 0.0;
+  float l_t = 0.f;
   progressBar.update(l_t);
 
   unsigned int l_iterations = 0;
@@ -211,6 +275,9 @@ int main( int argc, char** argv ) {
 
   // printer iteration counter
   tools::Logger::logger.printIterationsDone(l_iterations);
-
+  
+  // free dynamically allocated memory
+  delete l_scenario;
+  
   return 0;
 }
