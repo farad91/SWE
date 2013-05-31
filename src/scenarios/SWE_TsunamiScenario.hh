@@ -60,13 +60,13 @@ public:
     
     
     float getWaterHeight(float x, float y) {
-        float bath = getOriginalBathymetry(x,y);
+        float height = (-1) * getOriginalBathymetry(x,y);
         
         // apply the minimum height
-        if( bath > bath_min_zero_offset )
+        if(height < bath_min_zero_offset)
             return bath_min_zero_offset;
         else
-            return (-1) * bath;
+            return height;
     };
     
     
@@ -93,8 +93,10 @@ public:
         
         // apply the minimum elevation or depth
         if( result > (-1) * bath_min_zero_offset && result < 0)
+            // shallow water
             result = (-1) * bath_min_zero_offset;
         else if( result < bath_min_zero_offset && result >= 0)
+            // very low elevation of the landmass
             result = bath_min_zero_offset;
         
         return result;
@@ -148,7 +150,7 @@ public:
         return result;
     };
     
-    BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
+    BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW; };
 
     /**
      * readNetCDF will initialize the ids of the nc file and the ids of all
