@@ -137,7 +137,7 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
     else{
         // if an existing file needs to be continued
         // open .nc file
-        nc_open(fileName.c_str(), NC_NOWRITE, &dataFile);
+        nc_open(fileName.c_str(), NC_WRITE, &dataFile);
         
         // get the variables IDs 
         //nc_inq_varid(dataFile, "x",  &l_xVar );
