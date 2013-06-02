@@ -56,11 +56,11 @@ public:
      * readNetCDF will initialize the ids of the nc file and the ids of all
      * the variables which are being used
      * 
-     * @param filename the name of the nc-file to be opened
+     * @param data_file the name of the nc-file to be opened
      * @param CPFile filename of the checkpoint file
      * @return 0 if successful, else the error value of the netcdf-library
      */ 
-    int readNetCDF(const char *filename,const char *CPFile) {
+    int readNetCDF(const char *data_file, const char *CPFile) {
         // error values will be stored in this variable
         int err_val;
         
@@ -69,7 +69,7 @@ public:
         
         
         // open .nc file
-        if(err_val = nc_open(filename, NC_NOWRITE, &nc_id)) {
+        if(err_val = nc_open(data_file, NC_WRITE, &nc_id)) {
             cerr << nc_strerror(err_val) << endl;
             return err_val;
         }
