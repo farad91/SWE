@@ -91,6 +91,8 @@ public:
             cerr << nc_strerror(err_val) << endl;
         if(err_val = nc_inq_varid(nc_id, "b",  &b_id ))
             cerr << nc_strerror(err_val) << endl;
+        if(err_val = nc_inq_varid(nc_id, "time", &time_id ))
+            cerr << nc_strerror(err_val) << endl;
         if(err_val = nc_inq_varid(cp_id, "EndTime", &EndTime_id ))
             cerr << nc_strerror(err_val) << endl;
         
@@ -203,7 +205,7 @@ public:
         int err_val;
         float time;
         
-        err_val = nc_get_var_float(nc_id, EndTime_id, &time);
+        err_val = nc_get_var1_float(nc_id, time_id, &CP_Number, &time);
         if( err_val )
             cerr << nc_strerror(err_val) << endl;
         
@@ -263,7 +265,7 @@ private:
     int nc_id, cp_id;
     
     // variable ids
-    int x_id, y_id, h_id, hu_id, hv_id, b_id, Bound_id, EndTime_id;
+    int x_id, y_id, h_id, hu_id, hv_id, b_id, time_id, Bound_id, EndTime_id;
     
     // needed to make tho fitting of the requested coordinates to the grid
     float x_start, x_delta, y_start, y_delta;
