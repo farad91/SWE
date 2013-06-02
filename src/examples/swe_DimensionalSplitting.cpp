@@ -86,7 +86,7 @@ int main( int argc, char** argv ) {
   bool checkpoint;
 
   //! time when the simulation will be stopped (in seconds)
-  float l_endTime;
+  float l_endSimulation;
   
   //! number of checkpoints for visualization (at each checkpoint in time, an output file is written).
   int l_numberOfCheckPoints;
@@ -98,8 +98,13 @@ int main( int argc, char** argv ) {
   l_nY = l_nX = atoi(argv[1]);
   l_nY = atoi(argv[2]);
   l_baseName = std::string(argv[3]);
-  l_endTime  = atoi(argv[6]);
-
+  
+#ifdef TSUNAMINC
+  l_endSimulation  = atoi(argv[6]);
+#else
+  l_endSimulation = l_scenario->endSimulation();
+#endif
+  
   if(argc == 8)
     l_numberOfCheckPoints = atoi(argv[7]);
   else
@@ -122,9 +127,17 @@ int main( int argc, char** argv ) {
   
   
 #ifdef TSUNAMINC
+#ifdef DEBUG
+  cerr << "Creating scenario..." << endl;
+#endif
+  
   // load bathymetry (argv[4]) and displacement (argv[5]) from netCDF files
   SWE_NetCDFScenario *l_scenario = new SWE_TsunamiScenario();
-  l_scenario->readNetCDF(argv[4],argv[5]);
+  if(l_scenario->readNetCDF(argv[4],argv[5]) != 0) {
+    cerr << "Please specify correct input files!" << endl
+         << "Either " << argv[4] << " or " << argv[5] << " are unusable!" << endl;
+    std::exit(1);
+  }
 #else
   // create a simple artificial scenario
   SWE_DamBreakScenario *l_scenario = new SWE_DamBreakScenario();
@@ -152,9 +165,6 @@ int main( int argc, char** argv ) {
   // initialize the wave propagation block
   l_wavePropgationBlock.initScenario(l_originX, l_originY, *l_scenario);
 
-
-  //! time when the simulation ends.
-  float l_endSimulation = l_scenario->endSimulation();
 
   //! checkpoints when output files are written.
   float* l_checkPoints = new float[l_numberOfCheckPoints+1];
@@ -214,12 +224,14 @@ int main( int argc, char** argv ) {
 
   //! simulation time.
   float l_t = 0.f;
+  int   c_h = 1;
+  
   progressBar.update(l_t);
 
   unsigned int l_iterations = 0;
 
   // loop over checkpoints
-  for(int c=1; c<=l_numberOfCheckPoints; c++) {
+  for(int c=c_h; c<=l_numberOfCheckPoints; c++) {
 
     // do time steps until next checkpoint is reached
     while( l_t < l_checkPoints[c] ) {
@@ -229,10 +241,6 @@ int main( int argc, char** argv ) {
       // reset the cpu clock
       tools::Logger::logger.resetCpuClockToCurrentTime();
 
-      // approximate the maximum time step
-      // TODO: This calculation should be replaced by the usage of the wave speeds occuring during the flux computation
-      // Remark: The code is executed on the CPU, therefore a "valid result" depends on the CPU-GPU-synchronization.
-//      l_wavePropgationBlock.computeMaxTimestep();
       l_wavePropgationBlock.runTimestep();
       float l_maxTimeStepWidth = l_wavePropgationBlock.getMaxTimestep();
       // update the cpu time in the logger
