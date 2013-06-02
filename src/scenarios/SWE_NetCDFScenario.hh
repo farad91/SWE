@@ -11,7 +11,7 @@ class SWE_NetCDFScenario : public SWE_Scenario {
     virtual float getVeloc_u(float x, float y) { return 0.0f; };
     virtual float getVeloc_v(float x, float y) { return 0.0f; };
     virtual float getBathymetry(float x, float y) { return 0.0f; };
-    virtual int readNetCDF(char *filename,char *assistfile) { return 0;} ;
+    virtual int readNetCDF(const char *file_bathy, const char *file_displ) { return 0;} ;
     virtual float waterHeightAtRest() { return 10.0f; };
 
     virtual float endSimulation() { return 0.1f; };
