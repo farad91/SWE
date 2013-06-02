@@ -167,44 +167,75 @@ public:
         // number of dimensions of the variables 'x' and 'y'
         int dim_x_bathy, dim_y_bathy, dim_x_displ, dim_y_displ;
         
-        
         // open the bathymetry file
         if(err_val = nc_open(file_bathy, NC_NOWRITE, &ncid_bathy)) {
-            cerr << nc_strerror(err_val) << endl;
+            cerr << "Error: cannot open bathymetry file!" << endl
+                 << nc_strerror(err_val) << endl;
             return err_val;
         }
         
         // open the displacements file
         if(err_val = nc_open(file_displ, NC_NOWRITE, &ncid_displ)) {
-            cerr << nc_strerror(err_val) << endl;
+            cerr << "Error: cannot open displacement file!" << endl
+                 << nc_strerror(err_val) << endl;
             return err_val;
         }
         
         // get the variables IDs 
-        if(err_val = nc_inq_varid(ncid_bathy, "x", &x_id_bathy ))
-            cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_varid(ncid_bathy, "y", &y_id_bathy ))
-            cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_varid(ncid_bathy, "z", &z_id_bathy ))
-            cerr << nc_strerror(err_val) << endl;
+        // for the bathymetry
+        err_val = nc_inq_varid(ncid_bathy, "x", &x_id_bathy );
+        if( err_val )
+            cerr << "Error getting variable #x for the bathymetry:" << endl
+                 << nc_strerror(err_val) << endl;
         
-        if(err_val = nc_inq_varid(ncid_displ, "x", &x_id_displ ))
-            cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_varid(ncid_displ, "y", &y_id_displ ))
-            cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_varid(ncid_displ, "z", &z_id_displ ))
-            cerr << nc_strerror(err_val) << endl;
+        err_val = nc_inq_varid(ncid_bathy, "y", &y_id_bathy );
+        if( err_val )
+            cerr << "Error getting variable #y for the bathymetry:" << endl
+                 << nc_strerror(err_val) << endl;
+        
+        err_val = nc_inq_varid(ncid_bathy, "z", &z_id_bathy );
+        if( err_val )
+            cerr << "Error getting variable #z for the bathymetry:" << endl
+                 << nc_strerror(err_val) << endl;
+        
+        // for the displacement
+        err_val = nc_inq_varid(ncid_displ, "x", &x_id_displ );
+        if( err_val )
+            cerr << "Error getting variable #x for the displacement:" << endl
+                 << nc_strerror(err_val) << endl;
+        
+        err_val = nc_inq_varid(ncid_displ, "y", &y_id_displ );
+        if( err_val )
+            cerr << "Error getting variable #y for the displacement:" << endl
+                 << nc_strerror(err_val) << endl;
+        
+        err_val = nc_inq_varid(ncid_displ, "z", &z_id_displ );
+        if( err_val )
+            cerr << "Error getting variable #z for the displacement:" << endl
+                 << nc_strerror(err_val) << endl;
+        
         
         // get the number of dimensions contained by 'x' and 'y'
-        if(err_val = nc_inq_dimid(ncid_bathy, "x", &dim_x_bathy))
-            cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_dimid(ncid_bathy, "y", &dim_y_bathy))
-            cerr << nc_strerror(err_val) << endl;
+        err_val = nc_inq_dimid(ncid_bathy, "x", &dim_x_bathy);
+        if( err_val )
+            cerr << "Error getting the dimension id of #x for the bathymetry:" << endl
+                 << nc_strerror(err_val) << endl;
         
-        if(err_val = nc_inq_dimid(ncid_displ, "x", &dim_x_displ))
-            cerr << nc_strerror(err_val) << endl;
-        if(err_val = nc_inq_dimid(ncid_displ, "y", &dim_y_displ))
-            cerr << nc_strerror(err_val) << endl;
+        err_val = nc_inq_dimid(ncid_bathy, "y", &dim_y_bathy);
+        if( err_val )
+            cerr << "Error getting the dimension id of #y for the bathymetry:" << endl
+                 << nc_strerror(err_val) << endl;
+        
+        err_val = nc_inq_dimid(ncid_displ, "x", &dim_x_displ);
+        if( err_val )
+            cerr << "Error getting the dimension id of #y for the bathymetry:" << endl
+                 << nc_strerror(err_val) << endl;
+        
+        err_val = nc_inq_dimid(ncid_displ, "y", &dim_y_displ);
+        if( err_val )
+            cerr << "Error getting the dimension id of #y for the bathymetry:" << endl
+                 << nc_strerror(err_val) << endl;
+        
         
         // get length x, y;
         nc_inq_dimlen(ncid_bathy, dim_x_bathy, &x_size_bathy);
@@ -224,15 +255,23 @@ public:
         float x_next_displ,  y_next_displ;
         
         // bathymetry file
-        if(err_val = nc_get_var1_float(ncid_bathy, y_id_bathy, &u0, &y_start_bathy))
-            cerr <<  nc_strerror(err_val) << endl;
-        if(err_val = nc_get_var1_float(ncid_bathy, y_id_bathy, &u1, &y_next_bathy))
-            cerr <<  nc_strerror(err_val) << endl;
+        err_val = nc_get_var1_float(ncid_bathy, y_id_bathy, &u0, &y_start_bathy);
+        if( err_val )
+            cerr << nc_strerror(err_val) << endl;
         
-        if(err_val = nc_get_var1_float(ncid_bathy, x_id_bathy, &u0, &x_start_bathy))
-            cerr <<  nc_strerror(err_val) << endl;
-        if(err_val = nc_get_var1_float(ncid_bathy, x_id_bathy, &u1, &x_next_bathy))
-            cerr <<  nc_strerror(err_val) << endl;
+        err_val = nc_get_var1_float(ncid_bathy, y_id_bathy, &u1, &y_next_bathy);
+        if( err_val )
+            cerr << nc_strerror(err_val) << endl;
+        
+        
+        err_val = nc_get_var1_float(ncid_bathy, x_id_bathy, &u0, &x_start_bathy);
+        if( err_val )
+            cerr << nc_strerror(err_val) << endl;
+        
+        err_val = nc_get_var1_float(ncid_bathy, x_id_bathy, &u1, &x_next_bathy);
+        if( err_val )
+            cerr << nc_strerror(err_val) << endl;
+        
         
         y_delta_bathy = y_next_bathy - y_start_bathy;
         x_delta_bathy = x_next_bathy - x_start_bathy;
