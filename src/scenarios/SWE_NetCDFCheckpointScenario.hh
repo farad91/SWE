@@ -176,7 +176,7 @@ public:
         if( err_val )
             cerr <<  nc_strerror(err_val) << endl;
         
-        return hu / h;
+        return hu/(h*h);
     };
     
     
@@ -198,7 +198,7 @@ public:
         if( err_val )
             cerr <<  nc_strerror(err_val) << endl;
         
-        return hv / h;
+        return hv/(h*h);
     };
     
     float getTime() {
@@ -274,7 +274,7 @@ private:
     size_t x_size, y_size;
     
     //gets the nerest data point  for (x_in,y_in) and writes the values of this datapoint to x_out y_out
-    void toGridCoordinates(float x_in, float y_in, size_t* x_out, size_t* y_out) {
+    void toGridCoordinates(float x_in, float y_in, size_t* y_out, size_t* x_out) {
         *y_out = (size_t) (((y_in-y_start)/y_delta)+0.5f); 
         *x_out = (size_t) (((x_in-x_start)/x_delta)+0.5f);
         if(*x_out<0)
