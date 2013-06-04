@@ -139,6 +139,10 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
         // open .nc file
         nc_open(fileName.c_str(), NC_WRITE, &dataFile);
         
+        //get dim id
+        int l_timeDim;
+        nc_inq_dimid(dataFile, "time", &l_timeDim);
+        nc_inq_dimlen(dataFile, l_timeDim, &timeStep);
         // get the variables IDs 
         //nc_inq_varid(dataFile, "x",  &l_xVar );
         //nc_inq_varid(dataFile, "y",  &l_yVar );
@@ -147,6 +151,7 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
         nc_inq_varid(dataFile, "hv", &hvVar);
         nc_inq_varid(dataFile, "b",  &bVar );
         nc_inq_varid(dataFile, "time", &timeVar);
+
     }
 }
 
