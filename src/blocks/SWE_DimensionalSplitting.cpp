@@ -136,6 +136,7 @@ void SWE_DimensionalSplitting::computeNumericalFluxes()
 float SWE_DimensionalSplitting::computeHorizontalFluxes(){
     float edgeSpeed = 0.f;
     float maxEdgeSpeed = 0.f;
+    #pragma omp parallel for
     for(int y=0; y<ny+2; y++){
         for(int x=0; x<nx+1; x++){
             fWaveSolver.computeNetUpdates(h[x][y],  h[x+1][y],
@@ -159,6 +160,7 @@ float SWE_DimensionalSplitting::computeHorizontalFluxes(){
 float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
     float edgeSpeed = 0.f;
     float maxEdgeSpeed = 0.f;
+    #pragma omp parallel for
     for(int x=1; x<nx+1; x++){
         for(int y=0; y<ny+1; y++){
             fWaveSolver.computeNetUpdates(h[x][y] -(dt/dx * (hNetUpdatesRight[x-1][y] + hNetUpdatesLeft[x][y])),
@@ -183,6 +185,7 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
 float SWE_DimensionalSplitting::computeVerticalFluxes(){
     float edgeSpeed = 0.f;
     float maxEdgeSpeed = 0.f;
+    #pragma omp parallel for
     for(int x=1; x<nx+1; x++){
         for(int y=0; y<ny+1; y++){
             fWaveSolver.computeNetUpdates(h[x][y], h[x][y+1],
@@ -212,6 +215,7 @@ void SWE_DimensionalSplitting::updateUnknowns(float dt)
  * Updates the cells for the horizontal floating Water
  */
 void SWE_DimensionalSplitting::updateHorizontal(float dt){
+#pragma omp parallel for
     for(int y = 0; y<ny+2; y++){
         for(int x = 1; x<nx+1; x++){
             h[x][y] -= dt/dx * (hNetUpdatesRight[x-1][y] + hNetUpdatesLeft[x][y]);
@@ -224,6 +228,7 @@ void SWE_DimensionalSplitting::updateHorizontal(float dt){
  * Updates the cells for the vertical floating Water
  */
 void SWE_DimensionalSplitting::updateVertical(float dt){
+#pragma omp parallel for
     for(int x = 1; x<nx+1; x++){
         for(int y = 1; y<ny+1; y++){
             h[x][y] -= dt/dy * (hNetUpdatesAbove[x][y-1] + hNetUpdatesBelow[x][y]);
