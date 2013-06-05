@@ -73,7 +73,7 @@ vars.AddVariables(
               ),
 
   EnumVariable( 'parallelization', 'level of parallelization', 'none',
-                allowed_values=('none', 'cuda', 'mpi_with_cuda', 'mpi')
+                allowed_values=('none', 'cuda', 'mpi_with_cuda', 'mpi', 'openmp')
               ),
 
   EnumVariable( 'computeCapability', 'optional architecture/compute capability of the CUDA card', 'sm_20',
@@ -221,6 +221,10 @@ if env['compiler'] == 'intel' and env['showVectorization']:
 if env['compiler'] == 'intel' and env['platform'] == 'mic':
   env.Append(CCFLAGS=['-mmic'])
   env.Append(LINKFLAGS=['-mmic'])
+  
+if env['parallelization'] == 'openmp' and env['compiler'] == 'gnu':
+    env.Append(CCFLAGS=['-fopenmp'])
+    env.Append(LINKFLAGS=['-fopenmp'])
   
 # Compiler
 if env['compiler'] == 'intel':
