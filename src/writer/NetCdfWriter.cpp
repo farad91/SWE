@@ -31,6 +31,7 @@
 #include <vector>
 #include <iostream>
 #include <cassert>
+#define Skal 2
 
 /**
  * Create a netCdf-file
@@ -55,7 +56,7 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 		float i_originX, float i_originY, 
 		unsigned int i_flush) :
 		//const bool  &i_dynamicBathymetry) : //!TODO
-  io::Writer(i_baseName + ".nc", i_b, i_boundarySize, i_nX, i_nY),
+  io::Writer(i_baseName + ".nc", i_b, i_boundarySize,(int)(i_nX/Skal),(int) (i_nY/Skal)),
   flush(i_flush)
 {   
     EndTime = ETime;
@@ -181,12 +182,26 @@ void io::NetCdfWriter::writeVarTimeDependent( const Float2D &i_matrix,
 	//storage in Float2D is col wise
 	//read carefully, the dimensions are confusing
 	size_t start[] = {timeStep, 0, 0};
-	size_t count[] = {1, nY, 1};
+	size_t count[] = {1, 1, 1};
+	float Handling_X = (i_matrix.getCols()/Skal);
+	float Handling_Y = (i_matrix.getRows()/Skal);
 	for(unsigned int col = 0; col < nX; col++) {
-		start[2] = col; //select col (dim "x")
-		nc_put_vara_float(dataFile, i_ncVariable, start, count,
-				&i_matrix[col+boundarySize[0]][boundarySize[2]]); //write col
-  }
+	    for(unsigned int row = 0; row < nX; row++) {
+	    float input = 0;
+	    int counter = 0;
+	        for(int x=(col*Handling_X) ; x <=((col+1)*Handling_X) &&x < i_matrix.getCols();x++){
+	            for(int y=(row*Handling_Y); y<=((row+1)*Handling_Y) &&y < i_matrix.getRows() ;y++){
+	                input += i_matrix[x+boundarySize[0]][y+boundarySize[2]];
+	                counter ++;
+	            }
+            }
+            input = input/counter;
+		    start[2] = col; //select col (dim "x")
+		    start[1] = row; //
+		    nc_put_vara_float(dataFile, i_ncVariable, start, count,
+			    	&input); //write col
+        }
+    }
 }
 
 /**
@@ -207,12 +222,26 @@ void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
 	//storage in Float2D is col wise
 	//read carefully, the dimensions are confusing
 	size_t start[] = {0, 0};
-	size_t count[] = {nY, 1};
+	size_t count[] = {1, 1};
+	float Handling_X = (int)(i_matrix.getCols()/Skal);
+	float Handling_Y = (int)(i_matrix.getRows()/Skal);
 	for(unsigned int col = 0; col < nX; col++) {
-		start[1] = col; //select col (dim "x")
-		nc_put_vara_float(dataFile, i_ncVariable, start, count,
-				&i_matrix[col+boundarySize[0]][boundarySize[2]]); //write col
-  }
+	    for(unsigned int row = 0; row < nY; row++) {
+	    float input = 0;
+	    int counter = 0;
+	        for(unsigned int x=(col*Handling_X) ; x <=((col+1)*Handling_X) &&x < i_matrix.getCols(); x++){
+	            for(unsigned int y=(row*Handling_Y); y<=((row+1)*Handling_Y) && y<i_matrix.getRows(); y++){
+	                input = input + i_matrix[(x+boundarySize[0])][(y+boundarySize[2])];
+	                counter ++;
+	            }
+            }
+            input = input/counter;
+		    start[1] = col; //select col (dim "x")
+		    start[0] = row; //
+		    nc_put_vara_float(dataFile, i_ncVariable, start, count,
+			    	&input); //write col
+        }
+    }
 }
 //TODO void writeBoundary conditiones ( type cast and transltion tabel to int or som tihng like that
 void io::NetCdfWriter::writeBoundary(char* up, char* bottom, char* left, char* right) {
