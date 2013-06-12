@@ -31,6 +31,7 @@
 #include <string>
 #include <iostream>
 
+//just our block
 #include "blocks/SWE_DimensionalSplitting.hh"
 
 // input data
@@ -40,12 +41,9 @@
 #include "scenarios/SWE_simple_scenarios.hh"
 #endif
 
-// output data
-#ifdef WRITENETCDF
+// output data just NetCDF
 #include "writer/NetCdfWriter.hh"
-#else
-#include "writer/VtkWriter.hh"
-#endif
+
 
 
 #include "tools/help.hh"
@@ -59,7 +57,8 @@ int main( int argc, char** argv ) {
   /**
    * Initialization.
    */
-  
+
+// check if the necessary command line input parameters are given 
 #ifdef TSUNAMINC
   if(argc != 7 && argc != 8) {
     std::cout << "Aborting ... please provide proper input parameters." << std::endl
@@ -70,7 +69,6 @@ int main( int argc, char** argv ) {
     return 1;
   }
 #else
-  // check if the necessary command line input parameters are given
   if(argc != 4) {
     std::cout << "Aborting ... please provide proper input parameters." << std::endl
               << "Example: ./SWE_parallel 200 300 /work/openmp_out" << std::endl
@@ -125,12 +123,11 @@ int main( int argc, char** argv ) {
   checkpoint = false;
 #endif
   
-  
-#ifdef TSUNAMINC
 #ifdef DEBUG
   cerr << "Creating scenario..." << endl;
 #endif
-  
+ 
+#ifdef TSUNAMINC
   // load bathymetry (argv[4]) and displacement (argv[5]) from netCDF files
   SWE_NetCDFScenario *l_scenario = new SWE_TsunamiScenario();
   if(l_scenario->readNetCDF(argv[4],argv[5]) != 0) {
@@ -186,7 +183,6 @@ int main( int argc, char** argv ) {
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
 
   
-#ifdef WRITENETCDF
   // construct a NetCdfWriter
   io::NetCdfWriter l_writer( l_fileName,
                              l_wavePropgationBlock.getBathymetry(),
@@ -198,14 +194,6 @@ int main( int argc, char** argv ) {
                              l_originX, l_originY,
                              0
                            );
-#else
-  // construct a VtkWriter
-  io::VtkWriter l_writer( l_fileName,
-                          l_wavePropgationBlock.getBathymetry(),
-                          l_boundarySize,
-                          l_nX, l_nY,
-                          l_dX, l_dY );
-#endif
   
   // Write zero time step
   l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),

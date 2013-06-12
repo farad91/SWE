@@ -334,14 +334,21 @@ if env['block'] == 'dimsplit':
   
   env.Append(CPPDEFINES=['DIMSPLIT'])
 
-# change simple scenario  
+# change simple scenario
 if env['scenario'] == 'PartialDamBreak':
   env.Append(CPPDEFINES=['PARTIALDAMBREAK'])
 elif env['scenario'] == 'artiftsunami':
   env.Append(CPPDEFINES=['ARTIFICIAL_TSUNAMI'])
 elif env['scenario'] == 'Tsunami.nc':
   env.Append(CPPDEFINES=['TSUNAMINC'])
-  
+  env.Append(CPPDEFINES=['WRITENETCDF'])
+  env.Append(LIBS=['netcdf'])
+  # set netCDF location
+  if 'netCDFDir' in env:
+    env.Append(CPPPATH=[env['netCDFDir']+'/include'])
+    env.Append(LIBPATH=[os.path.join(env['netCDFDir'], 'lib')])
+    env.Append(RPATH=[os.path.join(env['netCDFDir'], 'lib')])
+
 if env['checkPoint'] == True:
   env.Append(CPPDEFINES=['CHECKPOINT'])
 

@@ -79,6 +79,8 @@ if env['asagi'] == True:
 # netCDF writer
 if env['writeNetCDF'] == True:
   sourceFiles.append( ['writer/NetCdfWriter.cpp'] )
+elif env['scenario'] == 'Tsunami.nc':
+  sourceFiles.append( ['writer/NetCdfWriter.cpp'] )
 else:
   sourceFiles.append( ['writer/VtkWriter.cpp'] )
 
