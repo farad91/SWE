@@ -183,15 +183,15 @@ void io::NetCdfWriter::writeVarTimeDependent( const Float2D &i_matrix,
 	//read carefully, the dimensions are confusing
 	size_t start[] = {timeStep, 0, 0};
 	size_t count[] = {1, 1, 1};
-	float Handling_X = (i_matrix.getCols()/Skal);
-	float Handling_Y = (i_matrix.getRows()/Skal);
+	float Handling_X = Skal;
+	float Handling_Y = Skal;
 	for(unsigned int col = 0; col < nX; col++) {
 	    for(unsigned int row = 0; row < nX; row++) {
 	    float input = 0;
 	    int counter = 0;
-	        for(int x=(col*Handling_X) ; x <=((col+1)*Handling_X) &&x < i_matrix.getCols();x++){
-	            for(int y=(row*Handling_Y); y<=((row+1)*Handling_Y) &&y < i_matrix.getRows() ;y++){
-	                input += i_matrix[x+boundarySize[0]][y+boundarySize[2]];
+	        for(int x=(col*Handling_X); x <=((col+1)*Handling_X) && (x < i_matrix.getCols()); x++){
+	            for(int y=(row*Handling_Y); y<=((row+1)*Handling_Y) && (y < i_matrix.getRows()); y++){
+	                input += i_matrix[x][y];
 	                counter ++;
 	            }
             }
@@ -223,15 +223,15 @@ void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
 	//read carefully, the dimensions are confusing
 	size_t start[] = {0, 0};
 	size_t count[] = {1, 1};
-	float Handling_X = (int)(i_matrix.getCols()/Skal);
-	float Handling_Y = (int)(i_matrix.getRows()/Skal);
+	float Handling_X = Skal;
+	float Handling_Y = Skal;
 	for(unsigned int col = 0; col < nX; col++) {
 	    for(unsigned int row = 0; row < nY; row++) {
 	    float input = 0;
 	    int counter = 0;
 	        for(unsigned int x=(col*Handling_X) ; x <=((col+1)*Handling_X) &&x < i_matrix.getCols(); x++){
 	            for(unsigned int y=(row*Handling_Y); y<=((row+1)*Handling_Y) && y<i_matrix.getRows(); y++){
-	                input = input + i_matrix[(x+boundarySize[0])][(y+boundarySize[2])];
+	                input += i_matrix[x][y];
 	                counter ++;
 	            }
             }
