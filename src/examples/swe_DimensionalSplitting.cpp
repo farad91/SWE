@@ -190,7 +190,7 @@ int main( int argc, char** argv ) {
                              l_nX, l_nY,
                              l_dX, l_dY,
                              l_endSimulation,
-                             !checkpoint,
+                             !checkpoint,true,
                              l_originX, l_originY,
                              0
                            );
@@ -199,6 +199,7 @@ int main( int argc, char** argv ) {
   l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                           l_wavePropgationBlock.getDischarge_hu(),
                           l_wavePropgationBlock.getDischarge_hv(),
+                          l_wavePropgationBlock.getBathymetry(),
                           (float) 0.);
 
 
@@ -253,6 +254,7 @@ int main( int argc, char** argv ) {
     l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                             l_wavePropgationBlock.getDischarge_hu(),
                             l_wavePropgationBlock.getDischarge_hv(),
+                            l_wavePropgationBlock.getBathymetry(),
                             l_t);
   }
 

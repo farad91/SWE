@@ -52,7 +52,7 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 		const BoundarySize &i_boundarySize,
 		int i_nX, int i_nY,
 		float i_dX, float i_dY, float ETime,
-		bool newfile,
+		bool newfile, bool dynamic,
 		float i_originX, float i_originY, 
 		unsigned int i_flush) :
 		//const bool  &i_dynamicBathymetry) : //!TODO
@@ -104,7 +104,10 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 	    nc_def_var(dataFile, "h",  NC_FLOAT, 3, dims, &hVar);
 	    nc_def_var(dataFile, "hu", NC_FLOAT, 3, dims, &huVar);
 	    nc_def_var(dataFile, "hv", NC_FLOAT, 3, dims, &hvVar);
-	    nc_def_var(dataFile, "b",  NC_FLOAT, 2, &dims[1], &bVar);
+	    if(dynamic)
+	        nc_def_var(dataFile, "b",  NC_FLOAT, 3, dims, &bVar);
+        else
+	        nc_def_var(dataFile, "b",  NC_FLOAT, 2, &dims[1], &bVar);
 	    // for check file
         nc_def_var(checkFile, "EndTime", NC_FLOAT,0,dims, &EndTimeVar);
         nc_def_var(checkFile, "BoundType", NC_FLOAT,1,&l_boundDim, &BoundVar);
@@ -189,9 +192,9 @@ void io::NetCdfWriter::writeVarTimeDependent( const Float2D &i_matrix,
 	    for(unsigned int row = 0; row < nX; row++) {
 	    float input = 0;
 	    int counter = 0;
-	        for(int x=(col*Handling_X); x <=((col+1)*Handling_X) && (x < i_matrix.getCols()); x++){
-	            for(int y=(row*Handling_Y); y<=((row+1)*Handling_Y) && (y < i_matrix.getRows()); y++){
-	                input += i_matrix[x][y];
+	        for(int x=(col*Handling_X); x <=((col+1)*Handling_X-boundarySize[0]); x++){
+	            for(int y=(row*Handling_Y); y<=((row+1)*Handling_Y-boundarySize[2]); y++){
+	                input += i_matrix[x+boundarySize[0]][y+boundarySize[2]];
 	                counter ++;
 	            }
             }
@@ -229,9 +232,9 @@ void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
 	    for(unsigned int row = 0; row < nY; row++) {
 	    float input = 0;
 	    int counter = 0;
-	        for(unsigned int x=(col*Handling_X) ; x <=((col+1)*Handling_X) &&x < i_matrix.getCols(); x++){
-	            for(unsigned int y=(row*Handling_Y); y<=((row+1)*Handling_Y) && y<i_matrix.getRows(); y++){
-	                input += i_matrix[x][y];
+	        for(unsigned int x=(col*Handling_X); x <=((col+1)*Handling_X-boundarySize[0]); x++){
+	            for(unsigned int y=(row*Handling_Y); y<=((row+1)*Handling_Y-boundarySize[2]); y++){
+	                input += i_matrix[x+boundarySize[0]][y+boundarySize[2]];
 	                counter ++;
 	            }
             }
@@ -294,4 +297,36 @@ void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
 	if (flush > 0 && timeStep % flush == 0)
 		nc_sync(dataFile);
 		
+}
+
+void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
+                                      const Float2D &i_hu,
+                                      const Float2D &i_hv,
+                                      const Float2D &i_b,
+                                      float i_time) {
+	//write i_time
+	nc_put_var1_float(dataFile, timeVar, &timeStep, &i_time);
+
+	//write water height
+	writeVarTimeDependent(i_h, hVar);
+
+	//write momentum in x-direction
+	writeVarTimeDependent(i_hu, huVar);
+
+	//write momentum in y-direction
+	writeVarTimeDependent(i_hv, hvVar);
+	
+	//write bathymetrie
+	writeVarTimeDependent(i_b, bVar);
+
+	// Increment timeStep for next call
+	timeStep++;
+	
+	nc_sync(dataFile);
+	if(i_time > (EndTime-1)){
+	    nc_close(checkFile);
+	    std::remove(("CP_"+fileName).c_str());
+	    }
+	if (flush > 0 && timeStep % flush == 0)
+		nc_sync(dataFile);		
 }
