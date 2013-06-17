@@ -109,6 +109,8 @@ vars.AddVariables(
   
   BoolVariable( 'checkPoint', 'load checkpoint files', False ),
   
+  BoolVariable( 'dynamic_Disp', 'work with dynamic displacement', False ),
+
   EnumVariable( 'block', 'compile with custom implementation for the SWE_Block', 'default',
                 allowed_values=('default', 'dimsplit')
                 ),
@@ -351,6 +353,9 @@ elif env['scenario'] == 'Tsunami.nc':
 
 if env['checkPoint'] == True:
   env.Append(CPPDEFINES=['CHECKPOINT'])
+
+if env['dynamic_Disp'] == True:
+  env.Append(CPPDEFINES=['DYNAMIC'])
 
 #
 # setup the program name and the build directory

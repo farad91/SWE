@@ -183,6 +183,8 @@ int main( int argc, char** argv ) {
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
 
   
+
+  #ifdef DYNAMIC
   // construct a NetCdfWriter
   io::NetCdfWriter l_writer( l_fileName,
                              l_wavePropgationBlock.getBathymetry(),
@@ -194,14 +196,30 @@ int main( int argc, char** argv ) {
                              l_originX, l_originY,
                              0
                            );
-  
   // Write zero time step
   l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                           l_wavePropgationBlock.getDischarge_hu(),
                           l_wavePropgationBlock.getDischarge_hv(),
                           l_wavePropgationBlock.getBathymetry(),
                           (float) 0.);
-
+  #else
+    // construct a NetCdfWriter
+  io::NetCdfWriter l_writer( l_fileName,
+                             l_wavePropgationBlock.getBathymetry(),
+                             l_boundarySize,
+                             l_nX, l_nY,
+                             l_dX, l_dY,
+                             l_endSimulation,
+                             !checkpoint,false,
+                             l_originX, l_originY,
+                             0
+                           );
+  l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
+                          l_wavePropgationBlock.getDischarge_hu(),
+                          l_wavePropgationBlock.getDischarge_hv(),
+                          (float) 0.);
+  #endif
+  
 
   /**
    * Simulation.
@@ -249,13 +267,19 @@ int main( int argc, char** argv ) {
     progressBar.clear();
     tools::Logger::logger.printOutputTime(l_t);
     progressBar.update(l_t);
-
+  #ifdef DYNAMIC
     // write output
     l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                             l_wavePropgationBlock.getDischarge_hu(),
                             l_wavePropgationBlock.getDischarge_hv(),
                             l_wavePropgationBlock.getBathymetry(),
                             l_t);
+  #else
+    l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
+                            l_wavePropgationBlock.getDischarge_hu(),
+                            l_wavePropgationBlock.getDischarge_hv(),
+                            l_t);
+  #endif
   }
 
   /**
