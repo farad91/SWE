@@ -92,7 +92,6 @@ void SWE_Block::initScenario( float _offsetX, float _offsetY,
                               const bool i_multipleBlocks ) {
 	offsetX = _offsetX;
 	offsetY = _offsetY;
-
   // initialize water height and discharge
   for(int i=1; i<=nx; i++)
     for(int j=1; j<=ny; j++) {
@@ -184,6 +183,7 @@ void SWE_Block::setBathymetry(float (*_b)(float, float)) {
 
   synchBathymetryAfterWrite();
 }
+
 
 // /** 
 // 	Restores values for h, v, and u from file data

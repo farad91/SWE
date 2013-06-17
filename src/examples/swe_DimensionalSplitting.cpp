@@ -247,7 +247,8 @@ int main( int argc, char** argv ) {
       
       // reset the cpu clock
       tools::Logger::logger.resetCpuClockToCurrentTime();
-
+      
+      
       l_wavePropgationBlock.runTimestep();
       float l_maxTimeStepWidth = l_wavePropgationBlock.getMaxTimestep();
       // update the cpu time in the logger
@@ -256,7 +257,9 @@ int main( int argc, char** argv ) {
       // update simulation time with time step width.
       l_t += l_maxTimeStepWidth;
       l_iterations++;
-
+      #ifdef DYNAMIC
+      l_wavePropgationBlock.updateBathymetry(*l_scenario, l_t);
+      #endif
       // print the current simulation time
       progressBar.clear();
       tools::Logger::logger.printSimulationTime(l_t);

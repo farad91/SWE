@@ -69,6 +69,39 @@ public:
             return height;
     };
     
+    float getDynamicBathymetry(float x, float y, float time) {
+        int   err_val;
+        float displacement = 0.f;
+        float result;
+        
+        size_t index[2];        
+        
+        // try to get the indices for the displacement data
+        if( !toGridCoordinates(DISPLACEMENT, x ,y, &index[1], &index[0]) ) {
+            // we are outside the area where the displacement is relevant
+            result = getOriginalBathymetry(x,y);
+        }
+        else {
+            // displacement data is available for this position
+            err_val = nc_get_var1_float(ncid_displ, z_id_displ, index, &displacement);
+            if( err_val )
+                cerr << nc_strerror(err_val) << endl;
+            if (time<3.f)
+                result = getOriginalBathymetry(x,y) + displacement*((1.f+time)/4.f);
+            else
+                result = getOriginalBathymetry(x,y) + displacement;
+        }
+        
+        // apply the minimum elevation or depth
+        if( result > (-1) * bath_min_zero_offset && result < 0)
+            // shallow water
+            result = (-1) * bath_min_zero_offset;
+        else if( result < bath_min_zero_offset && result >= 0)
+            // very low elevation of the landmass
+            result = bath_min_zero_offset;
+        
+        return result;
+    };
     
     float getBathymetry(float x, float y) {
         int   err_val;
@@ -402,13 +435,6 @@ private:
             else if(index[1] >= x_size_bathy)
                 index[1] = x_size_bathy-1;
             
-#ifdef DEBUG
-            cerr << "Warning: bathymetry requested is outside the boundaries of the data!" << endl;
-            cerr << "indices: \t("
-                 << (signed int) index[1] << "/"
-                 << (signed int) index[0] << ")" << endl;
-            cerr << "New indices: (" << index[1] << "/" << index[0] << ")" << endl;
-#endif
         }
         
         // get bathymetry from file

@@ -42,7 +42,7 @@ public:
     void computeNumericalFluxes();
     void updateUnknowns(float dt);
     void runTimestep();
-    
+    void updateBathymetry(SWE_Scenario& scenario ,float time);
 };
 
 #endif
