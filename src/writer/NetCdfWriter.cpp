@@ -298,7 +298,7 @@ void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
 		nc_sync(dataFile);
 		
 }
-
+//wrie timestep for dynamic bathymetrie
 void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
                                       const Float2D &i_hu,
                                       const Float2D &i_hv,
