@@ -77,6 +77,26 @@ void SWE_DimensionalSplitting::runTimestep()
     assert(maxTimestep <= 0.5f * dy / maxWaveSpeed);    
     return;
 }
+
+void SWE_DimensionalSplitting::runTimestep(float tmax)
+{
+    float maxWaveSpeed = 0.f;
+    float maxEdgeSpeed = 0.f;
+    // execute the f-wave solver: first horizontally
+    maxEdgeSpeed = computeHorizontalFluxes();
+    maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
+    maxTimestep = 0.4f * std::min(dx, dy) / maxWaveSpeed;
+    maxTimestep = std::min(maxTimestep,tmax);
+    updateHorizontal(maxTimestep);
+    // execute the f-wave solver: now vertically
+    maxEdgeSpeed = computeVerticalFluxes();
+    maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
+    updateVertical(maxTimestep);
+    assert(maxTimestep > 0.0001);
+    // assert just controlls y because it just can take y updates with invalide values
+    assert(maxTimestep <= 0.5f * dy / maxWaveSpeed);    
+    return;
+}
     /**This methode runs a simulation for the time intervall from tStart to tEnd 
     */
 

@@ -185,6 +185,7 @@ int main( int argc, char** argv ) {
   
 
   #ifdef DYNAMIC
+  l_wavePropgationBlock.updateBathymetry(*l_scenario, 0.f);
   // construct a NetCdfWriter
   io::NetCdfWriter l_writer( l_fileName,
                              l_wavePropgationBlock.getBathymetry(),
@@ -248,8 +249,12 @@ int main( int argc, char** argv ) {
       // reset the cpu clock
       tools::Logger::logger.resetCpuClockToCurrentTime();
       
-      
-      l_wavePropgationBlock.runTimestep();
+      if(l_t<=l_scenario->getEruptionDuration()){
+        l_wavePropgationBlock.runTimestep(l_scenario->getEruptionResolution());
+      }
+      else{
+            l_wavePropgationBlock.runTimestep();
+      }
       float l_maxTimeStepWidth = l_wavePropgationBlock.getMaxTimestep();
       // update the cpu time in the logger
       tools::Logger::logger.updateCpuTime();
@@ -264,20 +269,37 @@ int main( int argc, char** argv ) {
       progressBar.clear();
       tools::Logger::logger.printSimulationTime(l_t);
       progressBar.update(l_t);
+      
+      if(l_t<=l_scenario->getEruptionDuration()){
+        progressBar.clear();
+        tools::Logger::logger.printOutputTime(l_t);
+        progressBar.update(l_t);
+        l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
+                        l_wavePropgationBlock.getDischarge_hu(),
+                        l_wavePropgationBlock.getDischarge_hv(),
+                        l_wavePropgationBlock.getBathymetry(),
+                        l_t);
+      }
     }
-
+  #ifdef DYNAMIC
+    if(l_t>l_scenario->getEruptionDuration()){
     // print current simulation time of the output
     progressBar.clear();
     tools::Logger::logger.printOutputTime(l_t);
     progressBar.update(l_t);
-  #ifdef DYNAMIC
+  
     // write output
     l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                             l_wavePropgationBlock.getDischarge_hu(),
                             l_wavePropgationBlock.getDischarge_hv(),
                             l_wavePropgationBlock.getBathymetry(),
                             l_t);
+    }                        
   #else
+    progressBar.clear();
+    tools::Logger::logger.printOutputTime(l_t);
+    progressBar.update(l_t);
+  
     l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                             l_wavePropgationBlock.getDischarge_hu(),
                             l_wavePropgationBlock.getDischarge_hv(),

@@ -13,7 +13,9 @@ class SWE_NetCDFScenario : public SWE_Scenario {
     virtual float getBathymetry(float x, float y) { return 0.0f; };
     virtual int readNetCDF(const char *file_bathy, const char *file_displ) { return 0;} ;
     virtual float waterHeightAtRest() { return 10.0f; };
-    virtual float getDynamicBathymetry(float x, float y, float time){return 0.0f; };
+    virtual float getDynamicBathymetry(float x, float y, float time) { return 0.0f; };
+    virtual float getEruptionDuration() { return 0.0f; };
+    virtual float getEruptionResolution() { return 0.0f; };
     
     virtual float endSimulation() { return 0.1f; };
     

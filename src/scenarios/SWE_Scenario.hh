@@ -59,7 +59,9 @@ class SWE_Scenario {
     virtual float getVeloc_u(float x, float y) { return 0.0f; };
     virtual float getVeloc_v(float x, float y) { return 0.0f; };
     virtual float getBathymetry(float x, float y) { return 0.0f; };
-    virtual float getDynamicBathymetry(float x, float y, float time) {return 0.0f; };
+    virtual float getDynamicBathymetry(float x, float y, float time) {return getBathymetry(x,y); };
+    virtual float getEruptionDuration() {return 0.0f; };
+    virtual float getEruptionResolution(){return 0.0f; }; 
     
     virtual float waterHeightAtRest() { return 10.0f; };
 

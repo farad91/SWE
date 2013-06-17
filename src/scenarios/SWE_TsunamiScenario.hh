@@ -69,6 +69,7 @@ public:
             return height;
     };
     
+    
     float getDynamicBathymetry(float x, float y, float time) {
         int   err_val;
         float displacement = 0.f;
@@ -87,7 +88,7 @@ public:
             if( err_val )
                 cerr << nc_strerror(err_val) << endl;
             if (time<3.f)
-                result = getOriginalBathymetry(x,y) + displacement*((1.f+time)/4.f);
+                result = getOriginalBathymetry(x,y) + displacement*((time)/3.f);
             else
                 result = getOriginalBathymetry(x,y) + displacement;
         }
@@ -102,6 +103,10 @@ public:
         
         return result;
     };
+    
+    float getEruptionDuration() {return 3.0f; };
+    
+    float getEruptionResolution() {return 0.1f; };
     
     float getBathymetry(float x, float y) {
         int   err_val;
