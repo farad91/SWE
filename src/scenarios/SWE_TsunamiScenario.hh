@@ -83,17 +83,27 @@ public:
             result = getOriginalBathymetry(x,y);
         }
         else {
-            toTimeCoordinates(time,&index[0]);
-            
-            // displacement data is available for this position
-            err_val = nc_get_var1_float(ncid_displ, z_id_displ, index, &displacement);
-            if( err_val )
-                cerr << "Error in getDynamicBathymetry: " << endl
-                    << nc_strerror(err_val) << endl;
-            if (time<3.f)
-                result = getOriginalBathymetry(x,y) + displacement;
-            else
-                result = getOriginalBathymetry(x,y) + displacement;
+            if(DynamicDispl){
+                toTimeCoordinates(time,&index[0]);
+                // displacement data is available for this position
+                err_val = nc_get_var1_float(ncid_displ, z_id_displ, index, &displacement);
+                if( err_val )
+                    cerr << "Error in getDynamicBathymetry: " << endl
+                        << nc_strerror(err_val) << endl;
+                    result = getOriginalBathymetry(x,y) + displacement;
+                }
+            else{
+                 // displacement data is available for this position
+                err_val = nc_get_var1_float(ncid_displ, z_id_displ, &index[1], &displacement);
+                if( err_val )
+                    cerr << "Error in getDynamicBathymetry: " << endl
+                        << nc_strerror(err_val) << endl;
+                if (time<180.f)
+                    result = getOriginalBathymetry(x,y) + displacement*(time/180.f);
+                else
+                    result = getOriginalBathymetry(x,y) + displacement;
+            }
+               
         }
         
         // apply the minimum elevation or depth
@@ -107,9 +117,19 @@ public:
         return result;
     };
     
-    float getEruptionDuration() {return time_start_displ+(time_delta_displ*time_size_displ); };
+    float getEruptionDuration() {
+    if(DynamicDispl)
+        return time_start_displ+(time_delta_displ*time_size_displ); 
+    else
+        return 180.f;
+    };
     
-    float getEruptionResolution() {return time_delta_displ; };
+    float getEruptionResolution() {
+    if(DynamicDispl)
+        return time_delta_displ; 
+    else
+        return 2.f;
+    };
     
     float getBathymetry(float x, float y) {
         int   err_val;
@@ -119,7 +139,7 @@ public:
         size_t index[2];        
         
         // try to get the indices for the displacement data
-        if( !toGridCoordinates(DISPLACEMENT, x ,y, &index[1], &index[0]) || true ) {
+        if( !toGridCoordinates(DISPLACEMENT, x ,y, &index[1], &index[0]) || DynamicDispl ) {
             // we are outside the area where the displacement is relevant
             result = getOriginalBathymetry(x,y);
         }
@@ -256,11 +276,14 @@ public:
                  << nc_strerror(err_val) << endl;
         
         err_val = nc_inq_varid(ncid_displ, "time", &time_id_displ );
-        if( err_val )
+        if( err_val ){
+            DynamicDispl = false;
             cerr << "Error getting variable #time for the displacement probatly not existend:" << endl
                  << nc_strerror(err_val) << endl;
-        
-        
+        }
+        else{
+            DynamicDispl = true;
+        }
         // get the number of dimensions contained by 'x' and 'y'
         err_val = nc_inq_dimid(ncid_bathy, "x", &dim_x_bathy);
         if( err_val )
@@ -281,12 +304,12 @@ public:
         if( err_val )
             cerr << "Error getting the dimension id of #y for the bathymetry:" << endl
                  << nc_strerror(err_val) << endl;
-                 
-        err_val = nc_inq_dimid(ncid_displ, "time", &dim_time_displ);
-        if( err_val )
-            cerr << "Error getting the dimension id of #time for the bathymetry:" << endl
-                 << nc_strerror(err_val) << endl;
-        
+        if(DynamicDispl){         
+            err_val = nc_inq_dimid(ncid_displ, "time", &dim_time_displ);
+            if( err_val )
+                cerr << "Error getting the dimension id of #time for the bathymetry:" << endl
+                     << nc_strerror(err_val) << endl;
+        }
         
         // get length x, y;
         nc_inq_dimlen(ncid_bathy, dim_x_bathy, &x_size_bathy);
@@ -294,7 +317,8 @@ public:
         
         nc_inq_dimlen(ncid_displ, dim_x_displ, &x_size_displ);
         nc_inq_dimlen(ncid_displ, dim_y_displ, &y_size_displ);
-        nc_inq_dimlen(ncid_displ, dim_time_displ, &time_size_displ);
+        if(DynamicDispl)
+            nc_inq_dimlen(ncid_displ, dim_time_displ, &time_size_displ);
         
         
         // get the distance of the first two values on the x- and y-axis and
@@ -338,15 +362,16 @@ public:
             cerr <<  nc_strerror(err_val) << endl;
         if(err_val = nc_get_var1_float(ncid_displ, x_id_displ, &u1, &x_next_displ))
             cerr <<  nc_strerror(err_val) << endl;
-            
-        if(err_val = nc_get_var1_float(ncid_displ, time_id_displ, &u0, &time_start_displ))
-            cerr <<  nc_strerror(err_val) << endl;
-        if(err_val = nc_get_var1_float(ncid_displ, time_id_displ, &u1, &time_next_displ))
-            cerr <<  nc_strerror(err_val) << endl;
+        if(DynamicDispl){    
+            if(err_val = nc_get_var1_float(ncid_displ, time_id_displ, &u0, &time_start_displ))
+                cerr <<  nc_strerror(err_val) << endl;
+            if(err_val = nc_get_var1_float(ncid_displ, time_id_displ, &u1, &time_next_displ))
+                cerr <<  nc_strerror(err_val) << endl;
         
-        y_delta_displ = y_next_displ - y_start_displ;
-        x_delta_displ = x_next_displ - x_start_displ;
-        time_delta_displ = time_next_displ - time_start_displ;
+            y_delta_displ = y_next_displ - y_start_displ;
+            x_delta_displ = x_next_displ - x_start_displ;
+            time_delta_displ = time_next_displ - time_start_displ;
+        }
         
 #ifdef DEBUG
         printDebugInfo();
@@ -359,6 +384,8 @@ private:
     // all variables for the bathymetric  data are marked with *_bathy
     //                       displacement data are marked with *_displ
     
+    //type of bath file
+    bool DynamicDispl;
     // file id
     int ncid_bathy, ncid_displ;
     
@@ -388,7 +415,7 @@ private:
         *time_index = (size_t) ( ( (time - time_start_displ) / time_delta_displ ) + 0.5f );
         if(*time_index < 0)
             *time_index = 0;
-        if(*time_index >=time_size_displ){
+        if(*time_index >= time_size_displ){
             *time_index = time_size_displ-1;
             return true;
         } 
