@@ -94,7 +94,7 @@ public:
                 }
             else{
                  // displacement data is available for this position
-                err_val = nc_get_var1_float(ncid_displ, z_id_displ, &index[1], &displacement);
+                err_val = nc_get_var1_float(ncid_displ, z_id_displ, index+1, &displacement);
                 if( err_val )
                     cerr << "Error in getDynamicBathymetry: " << endl
                         << nc_strerror(err_val) << endl;
@@ -362,14 +362,17 @@ public:
             cerr <<  nc_strerror(err_val) << endl;
         if(err_val = nc_get_var1_float(ncid_displ, x_id_displ, &u1, &x_next_displ))
             cerr <<  nc_strerror(err_val) << endl;
+        
+        y_delta_displ = y_next_displ - y_start_displ;
+        x_delta_displ = x_next_displ - x_start_displ;
+            
         if(DynamicDispl){    
             if(err_val = nc_get_var1_float(ncid_displ, time_id_displ, &u0, &time_start_displ))
                 cerr <<  nc_strerror(err_val) << endl;
             if(err_val = nc_get_var1_float(ncid_displ, time_id_displ, &u1, &time_next_displ))
                 cerr <<  nc_strerror(err_val) << endl;
         
-            y_delta_displ = y_next_displ - y_start_displ;
-            x_delta_displ = x_next_displ - x_start_displ;
+            
             time_delta_displ = time_next_displ - time_start_displ;
         }
         
