@@ -258,8 +258,12 @@ void SWE_DimensionalSplitting::updateVertical(float dt){
     }    
 }
 void SWE_DimensionalSplitting::updateBathymetry(SWE_Scenario &scenario, float time){
-for(int i=1; i<=nx; i++) {
-    for(int j=1; j<=ny; j++) {
+int xStart = std::max(getXpos(scenario.getBoundaryPosDispl(BND_LEFT)) - 1,1);
+int xEnd = std::min(getXpos(scenario.getBoundaryPosDispl(BND_RIGHT)) + 1,nx);
+int yStart = std::max(getYpos(scenario.getBoundaryPosDispl(BND_BOTTOM)) - 1,1);
+int yEnd = std::min(getYpos(scenario.getBoundaryPosDispl(BND_TOP)) + 1,ny);
+for(int i=xStart; i<=xEnd; i++) {
+    for(int j=yStart; j<=yEnd; j++) {
       b[i][j] = scenario.getDynamicBathymetry( offsetX + (i-0.5f)*dx,
                                           offsetY + (j-0.5f)*dy, time);
     }
