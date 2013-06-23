@@ -64,7 +64,10 @@ public:
         
         // apply the minimum height
         if(height < bath_min_zero_offset)
-            return bath_min_zero_offset;
+            if(height <= 0.f)
+                return 0.f;
+            else
+                return bath_min_zero_offset;
         else
             return height;
     };
@@ -163,7 +166,45 @@ public:
         return result;
     };
     
-    
+    float getBoundaryPosDispl(BoundaryEdge i_edge) {
+        
+        //! variable ID of the axis orthogonal to the boundary
+        int var_id;
+        //! position of the boundary on the axis
+        size_t index;
+        
+        //! error value from the netcdf call
+        int err_val;
+        
+        float result;
+        
+        size_t u0    = 0;
+        size_t x_max = x_size_displ-1;
+        size_t y_max = y_size_displ-1;
+        
+        // select the axis (x or y)
+        if( i_edge == BND_RIGHT || i_edge == BND_LEFT )
+            var_id = x_id_displ;
+        else
+            var_id = y_id_displ;
+        
+        // get the index of the boundary
+        if( i_edge == BND_RIGHT )
+            index = x_max;
+        else if( i_edge == BND_TOP )
+            index = y_max;
+        else
+            index = u0;
+        
+        // get the coordinate from the nc-file
+        // or print an error message if that fails
+        err_val = nc_get_var1_float(ncid_displ, var_id, &index, &result);
+        if( err_val )
+            cerr << "Error reading boundary Displacement position:" << endl
+                 << "\t" << nc_strerror(err_val) << endl;
+        
+        return result;
+    };
     /**
      * getBoundaryPos will return the position of the boundary #i_edge
      * on the axis orthogonal to the boundary

@@ -26,6 +26,7 @@ class SWE_NetCDFScenario : public SWE_Scenario {
        else
           return 1.0f; 
     };
+    virtual float getBoundaryPosDispl(BoundaryEdge i_edge) { return 0.5f; };
     
     virtual ~SWE_NetCDFScenario() {};
 

@@ -233,7 +233,9 @@ int main( int argc, char** argv ) {
   //! simulation time.
   float l_t = 0.f;
   int   c_h = 1;
-  
+#ifdef DYNAMIC
+  int CP_Start = 0;
+#endif
   progressBar.update(l_t);
 
   unsigned int l_iterations = 0;
@@ -248,13 +250,16 @@ int main( int argc, char** argv ) {
       
       // reset the cpu clock
       tools::Logger::logger.resetCpuClockToCurrentTime();
-      
+      #ifdef DYNAMIC
       if(l_t<=l_scenario->getEruptionDuration()){
         l_wavePropgationBlock.runTimestep(l_scenario->getEruptionResolution());
       }
       else{
             l_wavePropgationBlock.runTimestep();
       }
+      #else
+      l_wavePropgationBlock.runTimestep();
+      #endif
       float l_maxTimeStepWidth = l_wavePropgationBlock.getMaxTimestep();
       // update the cpu time in the logger
       tools::Logger::logger.updateCpuTime();
@@ -263,14 +268,16 @@ int main( int argc, char** argv ) {
       l_t += l_maxTimeStepWidth;
       l_iterations++;
       #ifdef DYNAMIC
-      l_wavePropgationBlock.updateBathymetry(*l_scenario, l_t);
+      if(l_t<=l_scenario->getEruptionDuration()){
+        l_wavePropgationBlock.updateBathymetry(*l_scenario, l_t);
+      }
       #endif
       // print the current simulation time
       progressBar.clear();
       tools::Logger::logger.printSimulationTime(l_t);
       progressBar.update(l_t);
-      
-      if(l_t<=l_scenario->getEruptionDuration()){
+      #ifdef DYNAMIC
+      if(l_t<=l_scenario->getEruptionDuration() && CP_Start == 30){
         progressBar.clear();
         tools::Logger::logger.printOutputTime(l_t);
         progressBar.update(l_t);
@@ -279,7 +286,10 @@ int main( int argc, char** argv ) {
                         l_wavePropgationBlock.getDischarge_hv(),
                         l_wavePropgationBlock.getBathymetry(),
                         l_t);
+        CP_Start = 0;
       }
+        CP_Start++;
+      #endif
     }
   #ifdef DYNAMIC
     if(l_t>l_scenario->getEruptionDuration()){

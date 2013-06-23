@@ -31,7 +31,7 @@
 #include <vector>
 #include <iostream>
 #include <cassert>
-#define Skal 2
+#define Skal 4
 
 /**
  * Create a netCdf-file
