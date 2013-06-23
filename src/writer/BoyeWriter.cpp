@@ -25,7 +25,7 @@
  * A writer for the netCDF-format: http://www.unidata.ucar.edu/software/netcdf/
  */
 
-#include "NetCdfWriter.hh"
+#include "BoyeWriter.hh"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -42,9 +42,10 @@ io::BoyeWriter::BoyeWriter( const std::string &i_baseName,
                                 int NumberOfBoyes)
 {
     int status;
+    timeStep = 0;
 
     //create a netCDF-file, an existing file will be replaced
-    status = nc_create((i_baseName+"_Boye").c_str(), NC_NETCDF4, &dataFile);
+    status = nc_create((i_baseName+"_Boye.nc").c_str(), NC_NETCDF4, &dataFile);
 
   //check if the netCDF-file creation constructor succeeded.
     if (status != NC_NOERR) {
@@ -53,32 +54,20 @@ io::BoyeWriter::BoyeWriter( const std::string &i_baseName,
     }
 
     //dimensions
-    int l_timeDim, l_xDim, l_yDim, l_boundDim;
+    int l_timeDim, l_boyeDim;
     nc_def_dim(dataFile, "time", NC_UNLIMITED, &l_timeDim);
     nc_def_dim(dataFile, "Boye",  NumberOfBoyes , &l_boyeDim);
 
-    //variables (TODO: add rest of CF-1.5)
-    int l_xVar, l_yVar;
 
     nc_def_var(dataFile, "time", NC_FLOAT, 1, &l_timeDim, &timeVar);
-    ncPutAttText(timeVar, "long_name", "Time");
-    ncPutAttText(timeVar, "units", "seconds since simulation start"); // the word "since" is important for the paraview reader
-
 
     //variables, fastest changing index is on the right (C syntax), will be mirrored by the library
-    int dims[] = {l_timeDim, l_BoyeDim};
+    int dims[] = {l_timeDim, l_boyeDim};
     nc_def_var(dataFile, "Data",  NC_FLOAT, 2, dims, &hVar);
     
     nc_def_var(dataFile, "x", NC_FLOAT, 1, &dims[1], &xVar);
     nc_def_var(dataFile, "y",  NC_FLOAT, 1, &dims[1], &yVar);
-    //set attributes to match CF-1.5 convention
-    ncPutAttText(NC_GLOBAL, "Conventions", "CF-1.5");
-    ncPutAttText(NC_GLOBAL, "title", "Computed tsunami solution");
-    ncPutAttText(NC_GLOBAL, "history", "SWE");
-    ncPutAttText(NC_GLOBAL, "institution", "Technische Universitaet Muenchen, Department of Informatics, Chair of Scientific Computing");
-    ncPutAttText(NC_GLOBAL, "source", "Boye Data.");
-    ncPutAttText(NC_GLOBAL, "references", "http://www5.in.tum.de/SWE");
-    ncPutAttText(NC_GLOBAL, "comment", "SWE is free software and licensed under the GNU General Public License. Remark: In general this does not hold for the used input data.");
+
 }
 io::BoyeWriter::~BoyeWriter() {
 	
@@ -95,8 +84,9 @@ io::BoyeWriter::~BoyeWriter() {
 void io::BoyeWriter::initBoye( float l_x, float l_y, int number) {
 	//Define Positon of Boye #number 
 	size_t pos = number;
-	nc_put_var_float(dataFile, xVar, pos, &l_x);
-	nc_put_var_float(dataFile, xVar, pos, &l_x);
+    size_t count = 1;
+	nc_put_vara_float(dataFile, xVar, &pos, &count, &l_x);
+	nc_put_vara_float(dataFile, xVar, &pos, &count, &l_x);
 	nc_sync(dataFile);
 }
 /**
@@ -107,7 +97,13 @@ void io::BoyeWriter::initBoye( float l_x, float l_y, int number) {
  */
 void io::BoyeWriter::writeBoye( float time, float waterhigh, int number) {
 	//Put waterhigh for Boye
-	size_t Pos[] = {time,number};
-	nc_put_var_float(dataFile, BoyeVar, Pos, &l_x);
+    size_t dummy = timeStep; 
+    nc_put_var1_float(dataFile, timeVar, &dummy, &time);
+	size_t Pos[] = {0,0}; 
+    Pos[0] = timeStep;
+    Pos[1] = number;
+    size_t count[] = {1,1};
+	nc_put_vara_float(dataFile, hVar, Pos, count, &waterhigh);
     nc_sync(dataFile);
+    timeStep++;
 }

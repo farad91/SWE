@@ -42,22 +42,23 @@ namespace io {
   class BoyeWriter;
 }
 
-class io::BoyeWriter : public io::BoyeWriter {
+class io::BoyeWriter{
 private:
     /** netCDF file id*/
     int dataFile;
 
     /** Variable ids */
-    int yVar, xVar, hVar;
+    int yVar, xVar, hVar, timeVar;
+    int timeStep; 
 
   public:
-    BoyeWriter(const std::string &i_fileName, int NumberOfBoyes};
+    BoyeWriter(const std::string &i_fileName, int NumberOfBoyes);
     virtual ~BoyeWriter();
 
     // Init a boye
-    void initBoye( float time, float waterhigh, int number);
+    void initBoye( float x, float y, int number);
     
     //write data vor boye
     void writeBoye( float time, float waterhigh, int number);
-
+};
 #endif /* NETCDFWRITER_HH_ */
