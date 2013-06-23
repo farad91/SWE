@@ -265,3 +265,11 @@ for(int i=1; i<=nx; i++) {
     }
   }
 }
+
+int SWE_DimensionalSplitting::getXpos(float x){
+    return (int) ((x - offsetX)/dx)+0.5f;
+}
+
+int SWE_DimensionalSplitting::getYpos(float y){
+    return (int) ((y - offsetY)/dy)+0.5f;
+}
