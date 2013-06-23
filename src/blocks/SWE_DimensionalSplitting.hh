@@ -44,6 +44,8 @@ public:
     void runTimestep();
     void runTimestep(float tmax);
     void updateBathymetry(SWE_Scenario& scenario ,float time);
+    int getXpos(float x);
+    int getYpos(float y);
 };
 
 #endif
