@@ -26,7 +26,7 @@
  */
 
 #include "SWE_NetCDFScenario.hh"
-
+#include "tools/help.hh"
 #include <netcdf.h>
 
 #include <iostream>
@@ -416,6 +416,15 @@ public:
             
             time_delta_displ = time_next_displ - time_start_displ;
         }
+        // loading Bathymetry into the RAM
+        Bathymetry = new Float2D((int) x_size_bathy, (int) y_size_bathy);
+        size_t start[] = {0,0};
+        size_t count[] = {y_size_bathy-1, 1};
+        for(int i = 0; i < x_size_bathy; i++){
+            start[1] = i;
+            if(err_val = nc_get_vara_float(ncid_bathy, z_id_bathy, start, count, (*Bathymetry)[i]))
+                cerr <<  nc_strerror(err_val) << endl;    
+        }
         
 #ifdef DEBUG
         printDebugInfo();
@@ -448,6 +457,7 @@ private:
     // starting position and resolution of the displacement data
     float x_start_displ, y_start_displ, time_start_displ;
     float x_delta_displ, y_delta_displ, time_delta_displ;
+    Float2D *Bathymetry, *Displacement;
     
     /**
     * toTimeCoordinates calculates the nearest time where a displacement exists
@@ -549,10 +559,13 @@ private:
         }
         
         // get bathymetry from file
-        err_val = nc_get_var1_float(ncid_bathy, z_id_bathy, index, &result);
-        if( err_val )
-            cerr << "getOrginalBathymetrie: " << nc_strerror(err_val) << endl;
-        
+        //err_val = nc_get_var1_float(ncid_bathy, z_id_bathy, index, &result);
+        //if( err_val )
+        //    cerr << "getOrginalBathymetrie: " << nc_strerror(err_val) << endl;
+        Float2D &Bath = *Bathymetry;
+        int x_pos = index[1];
+        int y_pos = index[0]; 
+        result = Bath[y_pos][x_pos];
         return result;
     };
     

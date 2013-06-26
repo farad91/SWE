@@ -271,9 +271,19 @@ for(int i=xStart; i<=xEnd; i++) {
 }
 
 int SWE_DimensionalSplitting::getXpos(float x){
-    return (int) ((x - offsetX)/dx)+0.5f;
+    int result = (int) ((x - offsetX)/dx);
+    if(result < 0)
+        result = 0;
+    if(result > nx)
+        result = nx;
+    return result;
 }
 
 int SWE_DimensionalSplitting::getYpos(float y){
-    return (int) ((y - offsetY)/dy)+0.5f;
+    int result = (int) ((y - offsetY)/dy);
+    if(result < 0)
+        result = 0;
+    if(result > ny)
+        result = ny;
+    return result;
 }

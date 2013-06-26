@@ -43,7 +43,9 @@ io::BoyeWriter::BoyeWriter( const std::string &i_baseName,
 {
     int status;
     timeStep = 0;
-
+    initBoyes = 0;
+    int x_int[NumberOfBoyes];
+    int y_int[NumberOfBoyes];
     //create a netCDF-file, an existing file will be replaced
     status = nc_create((i_baseName+"_Boye.nc").c_str(), NC_NETCDF4, &dataFile);
 
@@ -81,13 +83,17 @@ io::BoyeWriter::~BoyeWriter() {
  * @param Y-position of boye
  * @param numberOfBoye
  */
-void io::BoyeWriter::initBoye( float l_x, float l_y, int number) {
+void io::BoyeWriter::initBoye( float l_x, float l_y, SWE_DimensionalSplitting &block, int number) {
 	//Define Positon of Boye #number 
 	size_t pos = number;
-    size_t count = 1;
-	nc_put_vara_float(dataFile, xVar, &pos, &count, &l_x);
-	nc_put_vara_float(dataFile, xVar, &pos, &count, &l_x);
+	nc_put_var1_float(dataFile, xVar, &pos, &l_x);
+	nc_put_var1_float(dataFile, yVar, &pos, &l_y);
+    x_int[number] = block.getXpos(l_x);
+    y_int[number] = block.getXpos(l_y);
+    assert(x_int[number]>=0);
+    assert(y_int[number]>=0);
 	nc_sync(dataFile);
+    initBoyes++;
 }
 /**
  * Write BoyeData 
@@ -95,15 +101,18 @@ void io::BoyeWriter::initBoye( float l_x, float l_y, int number) {
  * @param Value of WaterHigh
  * @param Number of the Boye being writtend
  */
-void io::BoyeWriter::writeBoye( float time, float waterhigh, int number) {
+void io::BoyeWriter::writeBoye( float time, SWE_DimensionalSplitting &block) {
 	//Put waterhigh for Boye
-    size_t dummy = timeStep; 
-    nc_put_var1_float(dataFile, timeVar, &dummy, &time);
+    nc_put_var1_float(dataFile, timeVar, &timeStep, &time);
 	size_t Pos[] = {0,0}; 
-    Pos[0] = timeStep;
-    Pos[1] = number;
-    size_t count[] = {1,1};
-	nc_put_vara_float(dataFile, hVar, Pos, count, &waterhigh);
+    for(int i = 0; i<initBoyes; i++){
+        Pos[0] = timeStep;
+        Pos[1] = i;
+        int x = x_int[i];
+        int y = y_int[i]; 
+        float height = block.getWaterHeight()[x][y]; 
+	    nc_put_var1_float(dataFile, hVar, Pos, &height);
+    }
     nc_sync(dataFile);
     timeStep++;
 }

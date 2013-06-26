@@ -33,6 +33,8 @@
 #include <string>
 #include <vector>
 #include <netcdf.h>
+#include "blocks/SWE_DimensionalSplitting.hh"
+#include "tools/help.hh"
 #ifdef MPI_INCLUDED_NETCDF
 #undef MPI_INCLUDED
 #undef MPI_INCLUDED_NETCDF
@@ -48,17 +50,17 @@ private:
     int dataFile;
 
     /** Variable ids */
-    int yVar, xVar, hVar, timeVar;
-    int timeStep; 
+    int yVar, xVar, hVar, timeVar, initBoyes, x_int[], y_int[];
+    size_t timeStep; 
 
   public:
     BoyeWriter(const std::string &i_fileName, int NumberOfBoyes);
     virtual ~BoyeWriter();
 
     // Init a boye
-    void initBoye( float x, float y, int number);
+    void initBoye( float x, float y, SWE_DimensionalSplitting &block, int number);
     
     //write data vor boye
-    void writeBoye( float time, float waterhigh, int number);
+    void writeBoye( float time, SWE_DimensionalSplitting &block);
 };
 #endif /* NETCDFWRITER_HH_ */

@@ -184,9 +184,11 @@ int main( int argc, char** argv ) {
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
 
   
-  io::BoyeWriter l_boyeWriter( l_fileName,1);
-  l_boyeWriter.initBoye(0,0,0);
-  l_boyeWriter.writeBoye(0,l_wavePropgationBlock.getWaterHeight()[100][100],0);
+  io::BoyeWriter l_boyeWriter( l_fileName,2);
+  l_boyeWriter.initBoye(0,0,l_wavePropgationBlock,0);
+  //l_boyeWriter.initBoye(10,0,l_wavePropgationBlock,1);
+  //l_boyeWriter.initBoye(0,1,l_wavePropgationBlock,2);
+  l_boyeWriter.writeBoye(0,l_wavePropgationBlock);
   
   #ifdef DYNAMIC
   l_wavePropgationBlock.updateBathymetry(*l_scenario, 0.f);
@@ -280,7 +282,7 @@ int main( int argc, char** argv ) {
       progressBar.clear();
       tools::Logger::logger.printSimulationTime(l_t);
       progressBar.update(l_t);
-      l_boyeWriter.writeBoye(l_t,l_wavePropgationBlock.getWaterHeight()[100][100],0);
+      l_boyeWriter.writeBoye(l_t, l_wavePropgationBlock);
       #ifdef DYNAMIC
       if(l_t<=l_scenario->getEruptionDuration() && CP_Start == 30){
         progressBar.clear();
