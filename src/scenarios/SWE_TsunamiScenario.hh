@@ -417,11 +417,11 @@ public:
             time_delta_displ = time_next_displ - time_start_displ;
         }
         // loading Bathymetry into the RAM
-        Bathymetry = new Float2D((int) x_size_bathy, (int) y_size_bathy);
+        Bathymetry = new Float2D((int) y_size_bathy, (int) x_size_bathy);
         size_t start[] = {0,0};
-        size_t count[] = {y_size_bathy-1, 1};
-        for(int i = 0; i < x_size_bathy; i++){
-            start[1] = i;
+        size_t count[] = {1, x_size_bathy-1};
+        for(int i = 0; i < y_size_bathy; i++){
+            start[0] = i;
             if(err_val = nc_get_vara_float(ncid_bathy, z_id_bathy, start, count, (*Bathymetry)[i]))
                 cerr <<  nc_strerror(err_val) << endl;    
         }
@@ -538,7 +538,6 @@ private:
      */
     float getOriginalBathymetry(float x, float y) {
       
-        int err_val;
         size_t index[2];
         
         float result;
@@ -558,10 +557,7 @@ private:
             
         }
         
-        // get bathymetry from file
-        //err_val = nc_get_var1_float(ncid_bathy, z_id_bathy, index, &result);
-        //if( err_val )
-        //    cerr << "getOrginalBathymetrie: " << nc_strerror(err_val) << endl;
+        // get bathymetry from Cache 
         Float2D &Bath = *Bathymetry;
         int x_pos = index[1];
         int y_pos = index[0]; 
