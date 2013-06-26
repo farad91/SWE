@@ -50,9 +50,9 @@ private:
     int dataFile;
 
     /** Variable ids */
-    int yVar, xVar, hVar, timeVar, initBoyes, x_int[], y_int[];
+    int yVar, xVar, hVar, timeVar, initBoyes;
     size_t timeStep; 
-
+    int *y_int, *x_int;
   public:
     BoyeWriter(const std::string &i_fileName, int NumberOfBoyes);
     virtual ~BoyeWriter();
@@ -61,6 +61,6 @@ private:
     void initBoye( float x, float y, SWE_DimensionalSplitting &block, int number);
     
     //write data vor boye
-    void writeBoye( float time, SWE_DimensionalSplitting &block);
+    void writeBoye( float time,const Float2D &h);
 };
 #endif /* NETCDFWRITER_HH_ */
