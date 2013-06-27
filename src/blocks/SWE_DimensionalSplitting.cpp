@@ -35,7 +35,7 @@ SWE_DimensionalSplitting::~SWE_DimensionalSplitting()
 {
 }
 
- /*Simulates a timestep of dt and doesn't check if this time is out of the conditones
+ /**Simulates a timestep of dt and doesn't check if this time is out of the conditones
  */
 void SWE_DimensionalSplitting::simulateTimestep(float dt)
 {
@@ -77,7 +77,9 @@ void SWE_DimensionalSplitting::runTimestep()
     assert(maxTimestep <= 0.5f * dy / maxWaveSpeed);    
     return;
 }
-
+ /** This funktion calculates and applays all changes for one Timestep with a maximum Stepwith
+ * @param tmax Maximum calculation Time 
+ */
 void SWE_DimensionalSplitting::runTimestep(float tmax)
 {
     float maxWaveSpeed = 0.f;
@@ -97,13 +99,15 @@ void SWE_DimensionalSplitting::runTimestep(float tmax)
     assert(maxTimestep <= 0.5f * dy / maxWaveSpeed);    
     return;
 }
-    /**This methode runs a simulation for the time intervall from tStart to tEnd 
-    */
 
+/**This methode runs a simulation for the time intervall from tStart to tEnd
+ *
+ * @param tStart Start Time of the intervall
+ * @param tEnd End Time of the intervall  
+ */
 float SWE_DimensionalSplitting::simulate(float tStart, float tEnd)
 {
     float time = tStart;
-    float dt;
     
     while(time < tEnd) {        
         // simulate a timestep with dynamic length
@@ -174,8 +178,9 @@ float SWE_DimensionalSplitting::computeHorizontalFluxes(){
  * Function to compute the vertical Fluxes in dependency of the results form @computeHorizontalFluxes 
  *
  * This private function computes the vertical Fluxes for each horizontal Row excluding the Ghostcells and returns the maximum Edge speed.
+ * @param dt MaxTimestep from @computeHorizontalFluxes
  *
- *@return maximum Edge speed  
+ * @return maximum Edge speed  
  */
 float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
     float edgeSpeed = 0.f;
@@ -200,7 +205,7 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
  *
  * This private function computes the vertical Fluxes for each horizontal Row excluding the Ghostcells and returns the maximum Edge speed.
  *
- *@return maximum Edge speed  
+ * @return maximum Edge speed  
  */
 float SWE_DimensionalSplitting::computeVerticalFluxes(){
     float edgeSpeed = 0.f;
@@ -221,7 +226,8 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(){
 }
 
 /**
- * apply the net-updates calculated with #computeNumericalFluxes 
+ * apply the net-updates calculated with #computeNumericalFluxes
+ * @param dt MaxTimeStep 
  */
 void SWE_DimensionalSplitting::updateUnknowns(float dt)
 {
@@ -233,6 +239,7 @@ void SWE_DimensionalSplitting::updateUnknowns(float dt)
 }
 /**
  * Updates the cells for the horizontal floating Water
+ * @param dt MaxTimeStep 
  */
 void SWE_DimensionalSplitting::updateHorizontal(float dt){
 #pragma omp parallel for
@@ -246,6 +253,7 @@ void SWE_DimensionalSplitting::updateHorizontal(float dt){
 }
 /**
  * Updates the cells for the vertical floating Water
+ * @param dt MaxTimeStep 
  */
 void SWE_DimensionalSplitting::updateVertical(float dt){
 #pragma omp parallel for
@@ -257,19 +265,28 @@ void SWE_DimensionalSplitting::updateVertical(float dt){
         }
     }    
 }
+/** This funktion Updates the Bathymetry data in the SWE_Block
+ *  
+ * @param &scenario an reference to the scenario with the Data for the Bathymetry
+ * @param time the timestemp for the requested Bathymetry   
+ */
 void SWE_DimensionalSplitting::updateBathymetry(SWE_Scenario &scenario, float time){
-int xStart = std::max(getXpos(scenario.getBoundaryPosDispl(BND_LEFT)) - 1,1);
-int xEnd = std::min(getXpos(scenario.getBoundaryPosDispl(BND_RIGHT)) + 1,nx);
-int yStart = std::max(getYpos(scenario.getBoundaryPosDispl(BND_BOTTOM)) - 1,1);
-int yEnd = std::min(getYpos(scenario.getBoundaryPosDispl(BND_TOP)) + 1,ny);
-for(int i=xStart; i<=xEnd; i++) {
-    for(int j=yStart; j<=yEnd; j++) {
-      b[i][j] = scenario.getDynamicBathymetry( offsetX + (i-0.5f)*dx,
-                                          offsetY + (j-0.5f)*dy, time);
+    // regulate the updat on the Displacement so the Dataflow is minimized 
+    int xStart = std::max(getXpos(scenario.getBoundaryPosDispl(BND_LEFT)) - 1,1);
+    int xEnd = std::min(getXpos(scenario.getBoundaryPosDispl(BND_RIGHT)) + 1,nx);
+    int yStart = std::max(getYpos(scenario.getBoundaryPosDispl(BND_BOTTOM)) - 1,1);
+    int yEnd = std::min(getYpos(scenario.getBoundaryPosDispl(BND_TOP)) + 1,ny);
+    for(int i=xStart; i<=xEnd; i++) {
+        for(int j=yStart; j<=yEnd; j++) {
+          b[i][j] = scenario.getDynamicBathymetry( offsetX + (i-0.5f)*dx,
+                                                   offsetY + (j-0.5f)*dy, time);
+        }
     }
-  }
 }
-
+/**This function returns to an x-coordinate the nearest Value for x-DataPoints
+ * @param x requested x-Coordinate
+ * @return Position of the x-Coordinate in the Block arrays
+ */
 int SWE_DimensionalSplitting::getXpos(float x){
     int result = (int) ((x - offsetX)/dx);
     if(result < 0)
@@ -278,7 +295,10 @@ int SWE_DimensionalSplitting::getXpos(float x){
         result = nx;
     return result;
 }
-
+/**This function returns to an y-coordinate the nearest Value for y-DataPoints
+ * @param y requested y-Coordinate
+ * @return Position of the y-Coordinate in the Block arrays
+ */
 int SWE_DimensionalSplitting::getYpos(float y){
     int result = (int) ((y - offsetY)/dy);
     if(result < 0)
