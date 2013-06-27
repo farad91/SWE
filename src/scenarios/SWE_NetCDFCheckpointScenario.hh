@@ -149,7 +149,6 @@ public:
         
         toGridCoordinates(x, y, &index[1], &index[2]);
         index[0] = CP_Number;
-        
         err_val = nc_get_var1_float(nc_id, b_id, index, &result);
         if( err_val )
             cerr <<  nc_strerror(err_val) << endl;
@@ -255,7 +254,7 @@ public:
     }
     
     //TODO
-    BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
+    BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW; };
     
     
 private:
@@ -273,17 +272,44 @@ private:
     // float x0, y0;
     size_t x_size, y_size;
     
-    //gets the nerest data point  for (x_in,y_in) and writes the values of this datapoint to x_out y_out
-    void toGridCoordinates(float x_in, float y_in, size_t* y_out, size_t* x_out) {
-        *y_out = (size_t) (((y_in-y_start)/y_delta)+0.5f); 
-        *x_out = (size_t) (((x_in-x_start)/x_delta)+0.5f);
-        if(*x_out<0)
-            *x_out=0;
-        if(*y_out < 0)
-            *y_out = 0;
-        if(*x_out >= x_size)
-            *x_out = x_size-1;
-        if(*y_out >=y_size)
-            *y_out = y_size-1;
+    /**
+     * toGridCoordinates calculates the indices for accessing the x and y coordinates of the data file
+     * 
+     * @param x_coord x-coordinate
+     * @param y_coord y-coordinate
+     * @param x_index place to write the index for the x-axis
+     * @param y_index place to write the index for the y-axis
+     * @return true if the coordinate is inside the boundaries of the data, false otherwise
+     */
+bool toGridCoordinates(float x_coord, float y_coord,
+                       size_t* x_index, size_t* y_index) {
+        
+        bool coordinate_valid = true;
+        
+        *y_index = (size_t) ( ( (y_coord - y_start) / y_delta ) + 0.5f ); 
+        *x_index = (size_t) ( ( (x_coord - x_start) / x_delta ) + 0.5f );
+        
+        
+        // check if any of the indices is outside of the boundaries
+        // and set output to the nearest legal value
+        if(*x_index < 0){
+            *x_index = 0;
+            coordinate_valid = false;
+        }
+        if(*x_index >= x_size){
+            *x_index = x_size-1;
+            coordinate_valid = false;
+        }
+        if(*y_index < 0){
+            *y_index = 0;
+            coordinate_valid = false;
+        }
+        if(*y_index >= y_size){
+            *y_index = y_size-1;
+            coordinate_valid = false;
+        }
+        
+        
+        return coordinate_valid;
     };
 };
