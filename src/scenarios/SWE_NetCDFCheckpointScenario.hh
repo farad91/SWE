@@ -58,7 +58,7 @@ public:
      * 
      * @param data_file the name of the nc-file to be opened
      * @param CPFile filename of the checkpoint file
-     * @return 0 if successful, else the error value of the netcdf-library
+     * @return 0 if successfull, else the error value of the netcdf-library
      */ 
     int readNetCDF(const char *data_file, const char *CPFile) {
         // error values will be stored in this variable
