@@ -4,6 +4,7 @@
  *
  * @author Alexander Breuer (breuera AT in.tum.de, http://www5.in.tum.de/wiki/index.php/Dipl.-Math._Alexander_Breuer)
  * @author Sebastian Rettenberger (rettenbs AT in.tum.de, http://www5.in.tum.de/wiki/index.php/Sebastian_Rettenberger,_M.Sc.)
+ * @author Thomas Blocher (blocher@in.tum.de)
  *
  * @section LICENSE
  *
@@ -31,7 +32,7 @@
 #include <vector>
 #include <iostream>
 #include <cassert>
-#define Skal 4
+
 
 /**
  * Create a netCdf-file
@@ -42,6 +43,10 @@
  * @param i_nY number of cells in the vertical direction.
  * @param i_dX cell size in x-direction.
  * @param i_dY cell size in y-direction.
+ * @param ETime time simulation is propoused to run
+ * @param coarse rate of compromising output Data
+ * @param newfile true if there is no CheckPoint To load
+ * @param dynamic true if there is a DynamicDisplacement to write
  * @param i_originX
  * @param i_originY
  * @param i_flush If > 0, flush data to disk every i_flush write operation
@@ -51,23 +56,30 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 		const Float2D &i_b,
 		const BoundarySize &i_boundarySize,
 		int i_nX, int i_nY,
-		float i_dX, float i_dY, float ETime,
+		float i_dX, float i_dY, float ETime, int coarse,
 		bool newfile, bool dynamic,
 		float i_originX, float i_originY, 
 		unsigned int i_flush) :
-		//const bool  &i_dynamicBathymetry) : //!TODO
-  io::Writer(i_baseName + ".nc", i_b, i_boundarySize,(int)(i_nX/Skal),(int) (i_nY/Skal)),
+  io::Writer(i_baseName + ".nc", i_b, i_boundarySize,(int)(i_nX/coarse),(int) (i_nY/coarse)),
   flush(i_flush)
-{   
+{
+    //putting informations for Global down
+    Skal = coarse;   
     EndTime = ETime;
+
     if(newfile){
 	    int status;
 
 	    //create a netCDF-file, an existing file will be replaced
 	    status = nc_create(fileName.c_str(), NC_NETCDF4, &dataFile);
+        //check if the netCDF-file creation constructor succeeded.
+	    if (status != NC_NOERR) {
+		    assert(false);
+		    return;
+	    }
+        //create a netCDF-file for Checkpointing informations
 	    status = nc_create(("CP_"+fileName).c_str(), NC_NETCDF4, &checkFile);
-
-      //check if the netCDF-file creation constructor succeeded.
+        //check if the netCDF-file creation constructor succeeded.
 	    if (status != NC_NOERR) {
 		    assert(false);
 		    return;
@@ -86,7 +98,7 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 	    nc_def_dim(dataFile, "time", NC_UNLIMITED, &l_timeDim);
 	    nc_def_dim(dataFile, "x", nX, &l_xDim);
 	    nc_def_dim(dataFile, "y", nY, &l_yDim);
-	    // for checkfile
+	    //dimensions for checkfile
 	    nc_def_dim(checkFile, "bound", 4, &l_boundDim);
 
 	    //variables (TODO: add rest of CF-1.5)
@@ -108,10 +120,11 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 	        nc_def_var(dataFile, "b",  NC_FLOAT, 3, dims, &bVar);
         else
 	        nc_def_var(dataFile, "b",  NC_FLOAT, 2, &dims[1], &bVar);
-	    // for check file
+	    //variables for check file
         nc_def_var(checkFile, "EndTime", NC_FLOAT,0,dims, &EndTimeVar);
         nc_def_var(checkFile, "BoundType", NC_FLOAT,1,&l_boundDim, &BoundVar);
         
+        // Setting Checkfile values and load them to Hard Disk
         nc_put_var_float(checkFile,EndTimeVar,&ETime);
         nc_sync(checkFile);
 	    //set attributes to match CF-1.5 convention
@@ -139,6 +152,8 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 	    }
     }
     else{
+        // Set Skal to 1 so that the file will be continued with same dimensions
+        Skal = 1;
         // if an existing file needs to be continued
         // open .nc file
         nc_open(fileName.c_str(), NC_WRITE, &dataFile);
@@ -148,8 +163,6 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
         nc_inq_dimid(dataFile, "time", &l_timeDim);
         nc_inq_dimlen(dataFile, l_timeDim, &timeStep);
         // get the variables IDs 
-        //nc_inq_varid(dataFile, "x",  &l_xVar );
-        //nc_inq_varid(dataFile, "y",  &l_yVar );
         nc_inq_varid(dataFile, "h",  &hVar);
         nc_inq_varid(dataFile, "hu", &huVar);
         nc_inq_varid(dataFile, "hv", &hvVar);
@@ -176,7 +189,6 @@ io::NetCdfWriter::~NetCdfWriter() {
  * boundarySize[3] == top
  *
  * @param i_matrix array which contains time dependent data.
- * @param i_boundarySize size of the boundaries.
  * @param i_ncVariable time dependent netCDF-variable to which the output is written to.
  */
 void io::NetCdfWriter::writeVarTimeDependent( const Float2D &i_matrix,
@@ -185,24 +197,35 @@ void io::NetCdfWriter::writeVarTimeDependent( const Float2D &i_matrix,
 	//storage in Float2D is col wise
 	//read carefully, the dimensions are confusing
 	size_t start[] = {timeStep, 0, 0};
-	size_t count[] = {1, 1, 1};
-	float Handling_X = Skal;
-	float Handling_Y = Skal;
-	for(unsigned int col = 0; col < nX; col++) {
-	    for(unsigned int row = 0; row < nX; row++) {
-	    float input = 0;
-	    int counter = 0;
-	        for(int x=(col*Handling_X); x <=((col+1)*Handling_X-boundarySize[0]); x++){
-	            for(int y=(row*Handling_Y); y<=((row+1)*Handling_Y-boundarySize[2]); y++){
-	                input += i_matrix[x+boundarySize[0]][y+boundarySize[2]];
-	                counter ++;
-	            }
+    size_t count[] = {1, nY, 1};
+    if(Skal == 1){
+        for(unsigned int col = 0; col < nX; col++) {
+            start[2] = col; //select col (dim "x")
+            nc_put_vara_float(dataFile, i_ncVariable, start, count,
+                &i_matrix[col+boundarySize[0]][boundarySize[2]]); //write col
             }
-            input = input/counter;
-		    start[2] = col; //select col (dim "x")
-		    start[1] = row; //
-		    nc_put_vara_float(dataFile, i_ncVariable, start, count,
-			    	&input); //write col
+    }
+    else{
+        //Write if Coarse aktiv
+	    count[1] = 1;
+	    for(unsigned int col = 0; col < nX; col++) {
+	        for(unsigned int row = 0; row < nX; row++) {
+	        float input = 0;
+	        int counter = 0;
+                //Calculate the mean value of a grid fitting in one DataPoint
+	            for(int x=(col*Skal); x <=((col+1)*Skal-boundarySize[0]); x++){
+	                for(int y=(row*Skal); y<=((row+1)*Skal-boundarySize[2]); y++){
+	                    input += i_matrix[x+boundarySize[0]][y+boundarySize[2]];
+	                    counter ++;
+	                }
+                }
+                input = input/counter;
+                //Set Coordinates for DataPoint
+		        start[2] = col; 
+		        start[1] = row;
+		        nc_put_vara_float(dataFile, i_ncVariable, start, count,
+			        	&input); //write DataPoint
+            }
         }
     }
 }
@@ -216,36 +239,46 @@ void io::NetCdfWriter::writeVarTimeDependent( const Float2D &i_matrix,
  * boundarySize[3] == top
  *
  * @param i_matrix array which contains time independent data.
- * @param i_boundarySize size of the boundaries.
  * @param i_ncVariable time independent netCDF-variable to which the output is written to.
  */
 void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
                                                 int i_ncVariable ) {
 	//write col wise, necessary to get rid of the boundary
-	//storage in Float2D is col wise
-	//read carefully, the dimensions are confusing
-	size_t start[] = {0, 0};
-	size_t count[] = {1, 1};
-	float Handling_X = Skal;
-	float Handling_Y = Skal;
-	for(unsigned int col = 0; col < nX; col++) {
-	    for(unsigned int row = 0; row < nY; row++) {
-	    float input = 0;
-	    int counter = 0;
-	        for(unsigned int x=(col*Handling_X); x <=((col+1)*Handling_X-boundarySize[0]); x++){
-	            for(unsigned int y=(row*Handling_Y); y<=((row+1)*Handling_Y-boundarySize[2]); y++){
-	                input += i_matrix[x+boundarySize[0]][y+boundarySize[2]];
-	                counter ++;
-	            }
-            }
-            input = input/counter;
-		    start[1] = col; //select col (dim "x")
-		    start[0] = row; //
-		    nc_put_vara_float(dataFile, i_ncVariable, start, count,
-			    	&input); //write col
+    //storage in Float2D is col wise
+    //read carefully, the dimensions are confusing
+    size_t start[] = {0, 0};
+    size_t count[] = {nY, 1};
+    if(Skal == 1){
+        for(unsigned int col = 0; col < nX; col++) {
+            start[1] = col; //select col (dim "x")
+            nc_put_vara_float(dataFile, i_ncVariable, start, count,
+                &i_matrix[col+boundarySize[0]][boundarySize[2]]); //write col
         }
     }
-}
+    //write DataPoints if Coarse aktiv
+	else{
+	    count[0] = 1;
+	    for(unsigned int col = 0; col < nX; col++) {
+	        for(unsigned int row = 0; row < nY; row++) {
+	        float input = 0;
+	        int counter = 0;
+                //Calculate the value of one DataPoint
+	            for(unsigned int x=(col*Skal); x <=((col+1)*Skal-boundarySize[0]); x++){
+	                for(unsigned int y=(row*Skal); y<=((row+1)*Skal-boundarySize[2]); y++){
+	                    input += i_matrix[x+boundarySize[0]][y+boundarySize[2]];
+	                    counter ++;
+	                }
+                }
+                input = input/counter;
+                //Set the Position of the DataPoint		        
+                start[1] = col;
+		        start[0] = row; 
+		        nc_put_vara_float(dataFile, i_ncVariable, start, count,
+			        	&input); //write DataPoint
+            }
+        }
+    }
+  }
 //TODO void writeBoundary conditiones ( type cast and transltion tabel to int or som tihng like that
 void io::NetCdfWriter::writeBoundary(char* up, char* bottom, char* left, char* right) {
     
@@ -255,15 +288,10 @@ void io::NetCdfWriter::writeBoundary(char* up, char* bottom, char* left, char* r
 /**
  * Writes the unknwons to a netCDF-file (-> constructor) with respect to the boundary sizes.
  *
- * boundarySize[0] == left
- * boundarySize[1] == right
- * boundarySize[2] == bottom
- * boundarySize[3] == top
  *
  * @param i_h water heights at a given time step.
  * @param i_hu momentums in x-direction at a given time step.
  * @param i_hv momentums in y-direction at a given time step.
- * @param i_boundarySize size of the boundaries.
  * @param i_time simulation time of the time step.
  */
 void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
@@ -288,17 +316,26 @@ void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
 
 	// Increment timeStep for next call
 	timeStep++;
-	
-	nc_sync(dataFile);
+	// remove Checkpoint File if Simulation succeeded
 	if(i_time > (EndTime-1)){
 	    nc_close(checkFile);
 	    std::remove(("CP_"+fileName).c_str());
 	    }
-	if (flush > 0 && timeStep % flush == 0)
+    //conditons when ncfile written to HardDisk
+	if (flush == 0 || timeStep % flush == 0)
 		nc_sync(dataFile);
 		
 }
-//wrie timestep for dynamic bathymetrie
+/**
+ * Writes the unknwons to a netCDF-file (-> constructor) with respect to the boundary sizes, including Dynamic Displacement.
+ *
+ *
+ * @param i_h water heights at a given time step.
+ * @param i_hu momentums in x-direction at a given time step.
+ * @param i_hv momentums in y-direction at a given time step.
+ * @param i_b bathymetry at a given time step.
+ * @param i_time simulation time of the time step.
+ */
 void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
                                       const Float2D &i_hu,
                                       const Float2D &i_hv,
@@ -321,12 +358,12 @@ void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
 
 	// Increment timeStep for next call
 	timeStep++;
-	
-	nc_sync(dataFile);
+	// remove Checkpoint File if Simulation succeeded
 	if(i_time > (EndTime-1)){
 	    nc_close(checkFile);
 	    std::remove(("CP_"+fileName).c_str());
 	    }
-	if (flush > 0 && timeStep % flush == 0)
+    //conditons when ncfile written to HardDisk
+	if (flush == 0 || timeStep % flush == 0)
 		nc_sync(dataFile);		
 }

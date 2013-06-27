@@ -58,6 +58,8 @@ private:
 
     /** Variable ids */
     int timeVar, hVar, huVar, hvVar, bVar, BoundVar, EndTimeVar, EndTime;
+    /** Coarse faktor*/
+    int Skal;
 
     /** Flush after every x write operation? */
     unsigned int flush;
@@ -76,7 +78,7 @@ private:
                  const Float2D &i_b,
                  const BoundarySize &i_boundarySize,
                  int i_nX, int i_nY,
-                 float i_dX, float i_dY, float ETime,
+                 float i_dX, float i_dY, float ETime, int coarse,
                  bool newfile = false, bool dynamic = false,
                  float i_originX = 0., float i_originY = 0., 
                  unsigned int i_flush = 0);
