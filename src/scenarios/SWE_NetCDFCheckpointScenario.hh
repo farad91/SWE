@@ -132,7 +132,7 @@ public:
         size_t index[3];
         float result;
         
-        toGridCoordinates(x, y, &index[1], &index[2]);
+        toGridCoordinates(x, y, &index[2], &index[1]);
         index[0] = CP_Number;
         
         err_val = nc_get_var1_float(nc_id, h_id, index, &result);
@@ -149,7 +149,7 @@ public:
         size_t index[3];
         float result;
         
-        toGridCoordinates(x, y, &index[1], &index[2]);
+        toGridCoordinates(x, y, &index[2], &index[1]);
         index[0] = CP_Number;
         err_val = nc_get_var1_float(nc_id, b_id, index, &result);
         if( err_val )
@@ -165,7 +165,7 @@ public:
         size_t index[3];
         float h, hu;
         
-        toGridCoordinates(x, y, &index[1], &index[2]);
+        toGridCoordinates(x, y, &index[2], &index[1]);
         index[0] = CP_Number;
         
         // get the value of 'h'
