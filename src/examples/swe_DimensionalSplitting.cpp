@@ -37,6 +37,7 @@
 // input data
 #ifdef TSUNAMINC
 #include "scenarios/SWE_TsunamiScenario.hh"
+#include "scenarios/SWE_NetCDFCheckpointScenario.hh"
 #else
 #include "scenarios/SWE_simple_scenarios.hh"
 #endif
@@ -108,21 +109,17 @@ int main( int argc, char** argv ) {
     l_numberOfCheckPoints = atoi(argv[7]);
   else
     l_numberOfCheckPoints = 20;
+std::string cp_file_name = "CP_"+l_baseName + "_00.nc";
+ifstream ifile(cp_file_name.c_str());
+if(ifile)
+{
+    checkpoint = true;
+}
+else
+{
+    checkpoint = false;
+}
 
-  
-#ifdef CHECKPOINT
-  // check if an output/checkpoint file of a previous run is existing
-  ifstream cp_file;
-  string cp_file_name = l_fileName + ".nc";
-  // try to open the checkpoint file
-  cp_file.open(cp_file_name.c_str(), ifstream::out);
-  // check for errors when opening the file
-  checkpoint = cp_file.good();
-  cp_file.close();
-#else
-  // assume that no output file is existing
-  checkpoint = false;
-#endif
   
 #ifdef DEBUG
   cerr << "Creating scenario..." << endl;
@@ -130,12 +127,24 @@ int main( int argc, char** argv ) {
  
 #ifdef TSUNAMINC
   // load bathymetry (argv[4]) and displacement (argv[5]) from netCDF files
-  SWE_NetCDFScenario *l_scenario = new SWE_TsunamiScenario();
-  if(l_scenario->readNetCDF(argv[4],argv[5]) != 0) {
-    cerr << "Please specify correct input files!" << endl
-         << "Either " << argv[4] << " or " << argv[5] << " are unusable!" << endl;
-    std::exit(1);
+  // decide witch scenario should be loaded
+  SWE_NetCDFScenario *l_scenario;
+  if(!checkpoint){
+  l_scenario = new SWE_TsunamiScenario();
+    if(l_scenario->readNetCDF(argv[4],argv[5]) != 0) {
+        cerr << "Please specify correct input files!" << endl
+             << "Either " << argv[4] << " or " << argv[5] << " are unusable!" << endl;
+        std::exit(1);
+    }
   }
+  else{
+    l_scenario = new SWE_NetCDFCheckpointScenario();
+        if(l_scenario->readNetCDF(argv[4],cp_file_name.c_str()) != 0) {
+            cerr << "Please specify correct input files!" << endl
+                 << "Either " << argv[4] << " or " << argv[5] << " are unusable!" << endl;
+            std::exit(1);
+        }
+    }
 #else
   // create a simple artificial scenario
   SWE_DamBreakScenario *l_scenario = new SWE_DamBreakScenario();
