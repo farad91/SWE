@@ -138,8 +138,9 @@ else
     }
   }
   else{
+    std::string file_name = l_baseName + "_00.nc";
     l_scenario = new SWE_NetCDFCheckpointScenario();
-        if(l_scenario->readNetCDF(argv[4],cp_file_name.c_str()) != 0) {
+        if(l_scenario->readNetCDF(file_name.c_str(),cp_file_name.c_str()) != 0) {
             cerr << "Please specify correct input files!" << endl
                  << "Either " << argv[4] << " or " << argv[5] << " are unusable!" << endl;
             std::exit(1);
@@ -200,7 +201,8 @@ else
   l_boyeWriter.writeBoye(0,l_wavePropgationBlock.getWaterHeight());
   
   #ifdef DYNAMIC
-  l_wavePropgationBlock.updateBathymetry(*l_scenario, 0.f);
+  if(!checkpoint)
+    l_wavePropgationBlock.updateBathymetry(*l_scenario, 0.f);
   // construct a NetCdfWriter
   io::NetCdfWriter l_writer( l_fileName,
                              l_wavePropgationBlock.getBathymetry(),
@@ -213,11 +215,12 @@ else
                              0
                            );
   // Write zero time step
-  l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
-                          l_wavePropgationBlock.getDischarge_hu(),
-                          l_wavePropgationBlock.getDischarge_hv(),
-                          l_wavePropgationBlock.getBathymetry(),
-                          (float) 0.);
+  if(!checkpoint)
+    l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
+                            l_wavePropgationBlock.getDischarge_hu(),
+                            l_wavePropgationBlock.getDischarge_hv(),
+                            l_wavePropgationBlock.getBathymetry(),
+                            (float) 0.);
   #else
     // construct a NetCdfWriter
   io::NetCdfWriter l_writer( l_fileName,
@@ -230,10 +233,11 @@ else
                              l_originX, l_originY,
                              0
                            );
-  l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
-                          l_wavePropgationBlock.getDischarge_hu(),
-                          l_wavePropgationBlock.getDischarge_hv(),
-                          (float) 0.);
+  if(!checkpoint)
+    l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
+                            l_wavePropgationBlock.getDischarge_hu(),
+                            l_wavePropgationBlock.getDischarge_hv(),
+                            (float) 0.);
   #endif
   
 
@@ -248,6 +252,19 @@ else
   //! simulation time.
   float l_t = 0.f;
   int   c_h = 1;
+  if(checkpoint){
+    l_t = l_scenario->getTime();
+    c_h = (int)(l_t / l_endSimulation) * l_numberOfCheckPoints;
+  }
+  //setting Scenario to standart to load Dynamic bathymetri
+  if(checkpoint){
+  l_scenario = new SWE_TsunamiScenario();
+    if(l_scenario->readNetCDF(argv[4],argv[5]) != 0) {
+        cerr << "Please specify correct input files!" << endl
+             << "Either " << argv[4] << " or " << argv[5] << " are unusable!" << endl;
+        std::exit(1);
+    }
+  } 
 #ifdef DYNAMIC
   int CP_Start = 0;
 #endif
