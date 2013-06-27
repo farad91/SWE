@@ -17,7 +17,8 @@ class SWE_NetCDFScenario : public SWE_Scenario {
     virtual float getEruptionDuration() { return 0.0f; };
     virtual float getEruptionResolution() { return 0.0f; };
     
-    virtual float endSimulation() { return 0.1f; };
+    virtual float endSimulation() { return 20.0f; };
+    virtual float getTime() {return 0.0f;};
     
     virtual BoundaryType getBoundaryType(BoundaryEdge edge) { return WALL; };
     virtual float getBoundaryPos(BoundaryEdge edge) {
