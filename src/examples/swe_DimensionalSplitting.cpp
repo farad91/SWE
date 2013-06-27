@@ -209,7 +209,7 @@ else
                              l_boundarySize,
                              l_nX, l_nY,
                              l_dX, l_dY,
-                             l_endSimulation,
+                             l_endSimulation, 1,
                              !checkpoint,true,
                              l_originX, l_originY,
                              0
@@ -228,7 +228,7 @@ else
                              l_boundarySize,
                              l_nX, l_nY,
                              l_dX, l_dY,
-                             l_endSimulation,
+                             l_endSimulation, 2,
                              !checkpoint,false,
                              l_originX, l_originY,
                              0
