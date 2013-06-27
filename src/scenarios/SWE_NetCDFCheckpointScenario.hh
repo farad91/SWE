@@ -70,7 +70,8 @@ public:
         
         // open .nc file
         if(err_val = nc_open(data_file, NC_WRITE, &nc_id)) {
-            cerr << nc_strerror(err_val) << endl;
+            cerr << "Error DataFile not found:" << endl
+                 << nc_strerror(err_val) << endl;
             return err_val;
         }
         if(err_val = nc_open(CPFile, NC_NOWRITE, &cp_id)) {
@@ -136,7 +137,8 @@ public:
         
         err_val = nc_get_var1_float(nc_id, h_id, index, &result);
         if( err_val )
-            cerr <<  nc_strerror(err_val) << endl;
+            cerr << "Error in getWaterHeight:" << endl
+                 << nc_strerror(err_val) << endl;
         
         return result;
     };
@@ -151,7 +153,8 @@ public:
         index[0] = CP_Number;
         err_val = nc_get_var1_float(nc_id, b_id, index, &result);
         if( err_val )
-            cerr <<  nc_strerror(err_val) << endl;
+            cerr << "Error in getBathymetry:" << endl
+                 << nc_strerror(err_val) << endl;
         
         return result;
     };
