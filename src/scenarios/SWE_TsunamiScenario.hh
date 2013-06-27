@@ -101,15 +101,13 @@ public:
                     result = getOriginalBathymetry(x,y) + displacement;
                 }
             else{
-                 // displacement data is available for this position
-                err_val = nc_get_var1_float(ncid_displ, z_id_displ, index+1, &displacement);
-                if( err_val )
-                    cerr << "Error in getDynamicBathymetry: " << endl
-                        << nc_strerror(err_val) << endl;
+                Float2D &Disp = *Displacement;
+                int x_pos = index[2];
+                int y_pos = index[1]; 
                 if (time<180.f)
-                    result = getOriginalBathymetry(x,y) + displacement*(time/180.f);
+                    result = getOriginalBathymetry(x,y) + Disp[y_pos][x_pos]*(time/180.f);
                 else
-                    result = getOriginalBathymetry(x,y) + displacement;
+                    result = getOriginalBathymetry(x,y) + Disp[y_pos][x_pos];
             }
                
         }
@@ -159,11 +157,10 @@ public:
         }
         else {
             // displacement data is available for this position
-            err_val = nc_get_var1_float(ncid_displ, z_id_displ, index, &displacement);
-            if( err_val )
-                cerr <<"Error in getBathymetry: "<< nc_strerror(err_val) << endl;
-            
-            result = getOriginalBathymetry(x,y) + displacement;
+            Float2D &Disp = *Displacement;
+            int x_pos = index[1];
+            int y_pos = index[0]; 
+            result = getOriginalBathymetry(x,y) + Disp[y_pos][x_pos];
         }
         
         // apply the minimum elevation or depth
@@ -451,6 +448,17 @@ public:
             start[0] = i;
             if(err_val = nc_get_vara_float(ncid_bathy, z_id_bathy, start, count, (*Bathymetry)[i]))
                 cerr <<  nc_strerror(err_val) << endl;    
+        }
+        // loading Bathymetry into the RAM
+        if(!DynamicDispl){
+            Displacement = new Float2D((int) y_size_displ, (int) x_size_displ);
+            size_t start[] = {0,0};
+            size_t count[] = {1, x_size_displ-1};
+            for(int i = 0; i < y_size_displ; i++){
+                start[0] = i;
+                if(err_val = nc_get_vara_float(ncid_displ, z_id_displ, start, count, (*Displacement)[i]))
+                    cerr <<  nc_strerror(err_val) << endl;    
+            }
         }
         
 #ifdef DEBUG
