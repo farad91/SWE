@@ -58,7 +58,12 @@ public:
         nc_close(ncid_displ);
     };
     
-    
+    /** This funktion returns the Water Height at the Position (x,y)
+     * 
+     *  @param x Requested x Position
+     *  @param y Requested y Position
+     *  @return Waterheight ot Requested Position
+     */
     float getWaterHeight(float x, float y) {
         float height = (-1) * getOriginalBathymetry(x,y);
         
@@ -134,6 +139,12 @@ public:
         return 2.f;
     };
     
+    /** This funktion returns the Bathymetry at the Position (x,y)
+     * 
+     *  @param x Requested x Position
+     *  @param y Requested y Position
+     *  @return Bathymetry ot Requested Position
+     */
     float getBathymetry(float x, float y) {
         int   err_val;
         float displacement = 0.f;
@@ -165,7 +176,13 @@ public:
         
         return result;
     };
-    
+    /**
+     * getBoundaryPosDispl will return the position of the Displacementboundary #i_edge
+     * on the axis orthogonal to the boundary
+     * 
+     * @param i_edge the boundary we want to get the position of
+     * @return the position of the Displacement boundary on the axis orthogonal to it
+     */
     float getBoundaryPosDispl(BoundaryEdge i_edge) {
         
         //! variable ID of the axis orthogonal to the boundary
@@ -222,6 +239,7 @@ public:
         //! error value from the netcdf call
         int err_val;
         
+        float halfcellsize;
         float result;
         
         size_t u0    = 0;
@@ -229,11 +247,14 @@ public:
         size_t y_max = y_size_bathy-1;
         
         // select the axis (x or y)
-        if( i_edge == BND_RIGHT || i_edge == BND_LEFT )
+        if( i_edge == BND_RIGHT || i_edge == BND_LEFT ){
             var_id = x_id_bathy;
-        else
+            halfcellsize = (x_delta_bathy/2.f);
+        }
+        else{
             var_id = y_id_bathy;
-        
+            halfcellsize = (x_delta_bathy/2.f);
+        }
         // get the index of the boundary
         if( i_edge == BND_RIGHT )
             index = x_max;
@@ -248,10 +269,16 @@ public:
         if( err_val )
             cerr << "Error reading boundary position:" << endl
                  << "\t" << nc_strerror(err_val) << endl;
-        
+        //fix for offset of Bathymetry
+        if(i_edge == BND_RIGHT || i_edge == BND_TOP)
+            result += halfcellsize;
+        else
+            result -= halfcellsize;
+ 
         return result;
     };
-    
+    /**
+     */
     BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW; };
 
     /**
