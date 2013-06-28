@@ -90,6 +90,8 @@ int main( int argc, char** argv ) {
   
   //! number of checkpoints for visualization (at each checkpoint in time, an output file is written).
   int l_numberOfCheckPoints;
+
+  int l_numberOfStartingCPs;
   
   //! l_baseName of the plots.
   std::string l_baseName;
@@ -105,10 +107,16 @@ int main( int argc, char** argv ) {
   l_endSimulation = l_scenario->endSimulation();
 #endif
   
-  if(argc == 8)
+  if(argc >= 8)
     l_numberOfCheckPoints = atoi(argv[7]);
   else
     l_numberOfCheckPoints = 20;
+  if(argc >= 9)
+    l_numberOfStartingCPs = atoi(argv[8]);
+  else
+    l_numberOfStartingCPs = 10;
+
+
 std::string cp_file_name = "CP_"+l_baseName + "_00.nc";
 ifstream ifile(cp_file_name.c_str());
 if(ifile)
@@ -172,15 +180,6 @@ else
   
   // initialize the wave propagation block
   l_wavePropgationBlock.initScenario(l_originX, l_originY, *l_scenario);
-
-
-  //! checkpoints when output files are written.
-  float* l_checkPoints = new float[l_numberOfCheckPoints+1];
-
-  // compute the checkpoints in time
-  for(int cp = 0; cp <= l_numberOfCheckPoints; cp++) {
-     l_checkPoints[cp] = cp*(l_endSimulation/l_numberOfCheckPoints);
-  }
 
   // Init fancy progressbar
   tools::ProgressBar progressBar(l_endSimulation);
@@ -258,16 +257,25 @@ else
   }
   //setting Scenario to standart to load Dynamic bathymetri
   if(checkpoint){
+  delete l_scenario;
   l_scenario = new SWE_TsunamiScenario();
     if(l_scenario->readNetCDF(argv[4],argv[5]) != 0) {
         cerr << "Please specify correct input files!" << endl
              << "Either " << argv[4] << " or " << argv[5] << " are unusable!" << endl;
         std::exit(1);
     }
-  } 
-#ifdef DYNAMIC
-  int CP_Start = 0;
-#endif
+  }
+      //! checkpoints when output files are written.
+  float* l_checkPoints = new float[l_numberOfCheckPoints+1+l_numberOfStartingCPs];
+  float l_duration = l_scenario->getEruptionDuration();
+  // compute the checkpoints in time
+  for(int cp = 0; cp <= l_numberOfStartingCPs; cp++) {
+     l_checkPoints[cp] = cp*(l_duration/l_numberOfStartingCPs);
+  }
+  for(int cp = (l_numberOfStartingCPs+1); cp <= l_numberOfCheckPoints+l_numberOfStartingCPs; cp++) {
+     l_checkPoints[cp] = (cp-l_numberOfStartingCPs)*(l_endSimulation-l_duration/l_numberOfCheckPoints)+l_duration;
+  }
+ 
   progressBar.update(l_t);
 
   unsigned int l_iterations = 0;
@@ -309,23 +317,8 @@ else
       tools::Logger::logger.printSimulationTime(l_t);
       progressBar.update(l_t);
       l_boyeWriter.writeBoye(l_t, l_wavePropgationBlock.getWaterHeight());
-      #ifdef DYNAMIC
-      if(l_t<=l_scenario->getEruptionDuration() && CP_Start == 30){
-        progressBar.clear();
-        tools::Logger::logger.printOutputTime(l_t);
-        progressBar.update(l_t);
-        l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
-                        l_wavePropgationBlock.getDischarge_hu(),
-                        l_wavePropgationBlock.getDischarge_hv(),
-                        l_wavePropgationBlock.getBathymetry(),
-                        l_t);
-        CP_Start = 0;
-      }
-        CP_Start++;
-      #endif
     }
   #ifdef DYNAMIC
-    if(l_t>l_scenario->getEruptionDuration()){
     // print current simulation time of the output
     progressBar.clear();
     tools::Logger::logger.printOutputTime(l_t);
@@ -336,13 +329,12 @@ else
                             l_wavePropgationBlock.getDischarge_hu(),
                             l_wavePropgationBlock.getDischarge_hv(),
                             l_wavePropgationBlock.getBathymetry(),
-                            l_t);
-    }                        
+                            l_t);                        
   #else
     progressBar.clear();
     tools::Logger::logger.printOutputTime(l_t);
     progressBar.update(l_t);
-  
+
     l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                             l_wavePropgationBlock.getDischarge_hu(),
                             l_wavePropgationBlock.getDischarge_hv(),
