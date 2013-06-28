@@ -101,7 +101,7 @@ void io::BoyeWriter::initBoye( float l_x, float l_y, SWE_DimensionalSplitting &b
  * @param Value of WaterHigh
  * @param Number of the Boye being writtend
  */
-void io::BoyeWriter::writeBoye( float time,const Float2D &h) {
+void io::BoyeWriter::writeBoye( float time, const Float2D &h, const Float2D &b) {
 	//Put waterhigh for Boye
     nc_put_var1_float(dataFile, timeVar, &timeStep, &time);
 	size_t Pos[] = {0,0}; 
@@ -110,7 +110,7 @@ void io::BoyeWriter::writeBoye( float time,const Float2D &h) {
         Pos[1] = i;
         int x = x_int[i];
         int y = y_int[i]; 
-        float height = h[x][y]; 
+        float height = h[x][y]+b[x][y]; 
 	    nc_put_var1_float(dataFile, hVar, Pos, &height);
     }
     nc_sync(dataFile);

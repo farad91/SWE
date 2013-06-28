@@ -61,6 +61,6 @@ private:
     void initBoye( float x, float y, SWE_DimensionalSplitting &block, int number);
     
     //write data vor boye
-    void writeBoye( float time,const Float2D &h);
+    void writeBoye( float time,const Float2D &h, const Float2D &b);
 };
 #endif /* NETCDFWRITER_HH_ */

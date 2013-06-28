@@ -191,11 +191,14 @@ else
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
 
   
-  io::BoyeWriter l_boyeWriter( l_fileName,2);
+  io::BoyeWriter l_boyeWriter( l_fileName,5);
   l_boyeWriter.initBoye(0,0,l_wavePropgationBlock,0);
-  l_boyeWriter.initBoye(10,0,l_wavePropgationBlock,1);
+  l_boyeWriter.initBoye(10000,10000,l_wavePropgationBlock,1);
+  l_boyeWriter.initBoye(-10000,-10000,l_wavePropgationBlock,1);
+  l_boyeWriter.initBoye(10000,0,l_wavePropgationBlock,1);
+  l_boyeWriter.initBoye(-5000,0,l_wavePropgationBlock,1);
   //l_boyeWriter.initBoye(0,1,l_wavePropgationBlock,2);
-  l_boyeWriter.writeBoye(0,l_wavePropgationBlock.getWaterHeight());
+  l_boyeWriter.writeBoye(0,l_wavePropgationBlock.getWaterHeight(),l_wavePropgationBlock.getBathymetry());
   
   #ifdef DYNAMIC
   if(!checkpoint)
@@ -329,7 +332,7 @@ else
       progressBar.clear();
       tools::Logger::logger.printSimulationTime(l_t);
       progressBar.update(l_t);
-      l_boyeWriter.writeBoye(l_t, l_wavePropgationBlock.getWaterHeight());
+      l_boyeWriter.writeBoye(l_t, l_wavePropgationBlock.getWaterHeight(),l_wavePropgationBlock.getBathymetry());
     }
   #ifdef DYNAMIC
     // print current simulation time of the output
