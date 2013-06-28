@@ -62,7 +62,7 @@ int main( int argc, char** argv ) {
 
 // check if the necessary command line input parameters are given 
 #ifdef TSUNAMINC
-  if(argc != 7 && argc != 8) {
+  if(argc < 7 || argc > 9) {
     std::cout << "Aborting ... please provide proper input parameters." << std::endl
               << "Example: ./SWE_parallel 200 300 /work/openmp_out bat.nc dis.nc 20" << std::endl
               << "\tfor a single block of size 200 * 300 and simulation time 20sec" << std::endl
@@ -184,9 +184,7 @@ else
   // Init fancy progressbar
   tools::ProgressBar progressBar(l_endSimulation);
 
-  // write the output at time zero
-  tools::Logger::logger.printOutputTime((float) 0.);
-  progressBar.update(0.);
+  
 
   std::string l_fileName = generateBaseFileName(l_baseName,0,0);
   //boundary size of the ghost layers
@@ -202,6 +200,8 @@ else
   #ifdef DYNAMIC
   if(!checkpoint)
     l_wavePropgationBlock.updateBathymetry(*l_scenario, 0.f);
+  
+
   // construct a NetCdfWriter
   io::NetCdfWriter l_writer( l_fileName,
                              l_wavePropgationBlock.getBathymetry(),
@@ -214,12 +214,16 @@ else
                              0
                            );
   // Write zero time step
-  if(!checkpoint)
+  if(!checkpoint){
+      // write the output at time zero
+    tools::Logger::logger.printOutputTime((float) 0.);
+    progressBar.update(0.);
     l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
                             l_wavePropgationBlock.getDischarge_hu(),
                             l_wavePropgationBlock.getDischarge_hv(),
                             l_wavePropgationBlock.getBathymetry(),
                             (float) 0.);
+  }
   #else
     // construct a NetCdfWriter
   io::NetCdfWriter l_writer( l_fileName,
@@ -255,17 +259,19 @@ else
     l_t = l_scenario->getTime();
     c_h = (int)(l_t / l_endSimulation) * l_numberOfCheckPoints;
   }
-  //setting Scenario to standart to load Dynamic bathymetri
+
+  //setting Scenario to standard to update Dynamic bathymetry
   if(checkpoint){
-  delete l_scenario;
-  l_scenario = new SWE_TsunamiScenario();
+    delete l_scenario;
+    l_scenario = new SWE_TsunamiScenario();
     if(l_scenario->readNetCDF(argv[4],argv[5]) != 0) {
         cerr << "Please specify correct input files!" << endl
              << "Either " << argv[4] << " or " << argv[5] << " are unusable!" << endl;
         std::exit(1);
     }
   }
-      //! checkpoints when output files are written.
+
+  //! checkpoints when output files are written.
   float* l_checkPoints = new float[l_numberOfCheckPoints+1+l_numberOfStartingCPs];
   float l_duration = l_scenario->getEruptionDuration();
   // compute the checkpoints in time
@@ -273,15 +279,22 @@ else
      l_checkPoints[cp] = cp*(l_duration/l_numberOfStartingCPs);
   }
   for(int cp = (l_numberOfStartingCPs+1); cp <= l_numberOfCheckPoints+l_numberOfStartingCPs; cp++) {
-     l_checkPoints[cp] = (cp-l_numberOfStartingCPs)*(l_endSimulation-l_duration/l_numberOfCheckPoints)+l_duration;
+     l_checkPoints[cp] = (cp-l_numberOfStartingCPs)*((l_endSimulation-l_duration)/l_numberOfCheckPoints)+l_duration;
   }
+  
+  if(checkpoint){
+    for(int cp_time = 0; l_checkPoints[cp_time] < l_t; cp_time++){
+        c_h = cp_time+1;
+    }
+  }
+  
  
   progressBar.update(l_t);
 
   unsigned int l_iterations = 0;
 
   // loop over checkpoints
-  for(int c=c_h; c<=l_numberOfCheckPoints; c++) {
+  for(int c=c_h; c<=l_numberOfCheckPoints+l_numberOfStartingCPs; c++) {
 
     // do time steps until next checkpoint is reached
     while( l_t < l_checkPoints[c] ) {
