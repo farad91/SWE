@@ -106,18 +106,24 @@ int main( int argc, char** argv ) {
 #else
   l_endSimulation = l_scenario->endSimulation();
 #endif
-  
+
+  //Set NumberOf Checkpoints 
   if(argc >= 8)
     l_numberOfCheckPoints = atoi(argv[7]);
   else
     l_numberOfCheckPoints = 20;
+  #ifdef DYNAMIC
   if(argc >= 9)
     l_numberOfStartingCPs = atoi(argv[8]);
   else
     l_numberOfStartingCPs = 10;
+#else
+  l_numberOfStartingCPs = 0;
+#endif
 
-
-std::string cp_file_name = "CP_"+l_baseName + "_00.nc";
+//Generate Filename and Check if there is an Loadable Checkpoint
+std::string l_fileName = generateBaseFileName(l_baseName,0,0);
+std::string cp_file_name = "CP_"+l_fileName + ".nc";
 ifstream ifile(cp_file_name.c_str());
 if(ifile)
 {
@@ -185,26 +191,19 @@ else
   tools::ProgressBar progressBar(l_endSimulation);
 
   
-
-  std::string l_fileName = generateBaseFileName(l_baseName,0,0);
   //boundary size of the ghost layers
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
 
-  
+  //Prepaire Boyes
   io::BoyeWriter l_boyeWriter( l_fileName,5);
   l_boyeWriter.initBoye(0,0,l_wavePropgationBlock,0);
   l_boyeWriter.initBoye(10000,10000,l_wavePropgationBlock,1);
   l_boyeWriter.initBoye(-10000,-10000,l_wavePropgationBlock,1);
   l_boyeWriter.initBoye(10000,0,l_wavePropgationBlock,1);
   l_boyeWriter.initBoye(-5000,0,l_wavePropgationBlock,1);
-  //l_boyeWriter.initBoye(0,1,l_wavePropgationBlock,2);
   l_boyeWriter.writeBoye(0,l_wavePropgationBlock.getWaterHeight(),l_wavePropgationBlock.getBathymetry());
   
   #ifdef DYNAMIC
-  if(!checkpoint)
-    l_wavePropgationBlock.updateBathymetry(*l_scenario, 0.f);
-  
-
   // construct a NetCdfWriter
   io::NetCdfWriter l_writer( l_fileName,
                              l_wavePropgationBlock.getBathymetry(),
@@ -218,7 +217,7 @@ else
                            );
   // Write zero time step
   if(!checkpoint){
-      // write the output at time zero
+    // write the output at time zero
     tools::Logger::logger.printOutputTime((float) 0.);
     progressBar.update(0.);
     l_writer.writeTimeStep( l_wavePropgationBlock.getWaterHeight(),
@@ -260,7 +259,6 @@ else
   int   c_h = 1;
   if(checkpoint){
     l_t = l_scenario->getTime();
-    c_h = (int)(l_t / l_endSimulation) * l_numberOfCheckPoints;
   }
 
   //setting Scenario to standard to update Dynamic bathymetry
@@ -284,7 +282,7 @@ else
   for(int cp = (l_numberOfStartingCPs+1); cp <= l_numberOfCheckPoints+l_numberOfStartingCPs; cp++) {
      l_checkPoints[cp] = (cp-l_numberOfStartingCPs)*((l_endSimulation-l_duration)/l_numberOfCheckPoints)+l_duration;
   }
-  
+  //Set counter to needed Checkpoint
   if(checkpoint){
     for(int cp_time = 0; l_checkPoints[cp_time] < l_t; cp_time++){
         c_h = cp_time+1;

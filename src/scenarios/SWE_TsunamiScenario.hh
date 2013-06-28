@@ -124,10 +124,14 @@ public:
     };
     
     float getEruptionDuration() {
+    #ifdef DYNAMIC
     if(DynamicDispl)
         return time_start_displ+(time_delta_displ*time_size_displ); 
     else
         return 180.f;
+    #else
+        return 0.f;
+    #endif
     };
     
     float getEruptionResolution() {
@@ -147,11 +151,16 @@ public:
         int   err_val;
         float displacement = 0.f;
         float result;
-        
+            
+        #ifdef DYNAMIC
+            // Result equals value at time zero
+            result = getOriginalBathymetry(x,y);
+        #else
+
         size_t index[2];        
         
         // try to get the indices for the displacement data
-        if( !toGridCoordinates(DISPLACEMENT, x ,y, &index[1], &index[0]) || DynamicDispl ) {
+        if( !toGridCoordinates(DISPLACEMENT, x ,y, &index[1], &index[0])) {
             // we are outside the area where the displacement is relevant
             result = getOriginalBathymetry(x,y);
         }
@@ -162,7 +171,7 @@ public:
             int y_pos = index[0]; 
             result = getOriginalBathymetry(x,y) + Disp[y_pos][x_pos];
         }
-        
+        #endif
         // apply the minimum elevation or depth
         if( result > (-1) * bath_min_zero_offset && result < 0)
             // shallow water
@@ -460,6 +469,18 @@ public:
                     cerr <<  nc_strerror(err_val) << endl;    
             }
         }
+        #ifndef DYNAMIC
+        if(DynamicDispl){
+            Displacement = new Float2D((int) y_size_displ, (int) x_size_displ);
+            size_t start[] = {time_size_displ-1,0,0};
+            size_t count[] = {1,1, x_size_displ-1};
+            for(int i = 0; i < y_size_displ; i++){
+                start[1] = i;
+                if(err_val = nc_get_vara_float(ncid_displ, z_id_displ, start, count, (*Displacement)[i]))
+                    cerr <<  nc_strerror(err_val) << endl;    
+            }
+        }
+        #endif
         
 #ifdef DEBUG
         printDebugInfo();
