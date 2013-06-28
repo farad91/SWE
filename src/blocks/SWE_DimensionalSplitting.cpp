@@ -278,8 +278,10 @@ void SWE_DimensionalSplitting::updateBathymetry(SWE_Scenario &scenario, float ti
     int yEnd = std::min(getYpos(scenario.getBoundaryPosDispl(BND_TOP)) + 1,ny);
     for(int i=xStart; i<=xEnd; i++) {
         for(int j=yStart; j<=yEnd; j++) {
-          b[i][j] = scenario.getDynamicBathymetry( offsetX + (i-0.5f)*dx,
-                                                   offsetY + (j-0.5f)*dy, time);
+          //make sure dry datapoint doesn't get wet
+          if(b[i][j] < 0.)
+            b[i][j] = scenario.getDynamicBathymetry( offsetX + (i-0.5f)*dx,
+                                                       offsetY + (j-0.5f)*dy, time);
         }
     }
 }
