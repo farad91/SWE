@@ -158,14 +158,23 @@ public:
         int err_val;
         size_t index[3];
         float result;
+        int dims;
         
         toGridCoordinates(x, y, &index[2], &index[1]);
         index[0] = CP_Number;
-        err_val = nc_get_var1_float(nc_id, b_id, index, &result);
-        if( err_val )
-            cerr << "Error in getBathymetry:" << endl
-                 << nc_strerror(err_val) << endl;
-        
+        nc_inq_varndims (nc_id, b_id, &dims);
+        if(dims == 3){
+            err_val = nc_get_var1_float(nc_id, b_id, index, &result);
+            if( err_val )
+                cerr << "Error in getBathymetry:" << endl
+                     << nc_strerror(err_val) << endl;
+        }
+        else{
+            err_val = nc_get_var1_float(nc_id, b_id, &index[1], &result);
+            if( err_val )
+                cerr << "Error in getBathymetry:" << endl
+                    << nc_strerror(err_val) << endl;
+        }
         return result;
     };
     
