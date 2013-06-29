@@ -126,7 +126,12 @@ public:
         CP_Number -= 1;   
         return 0;
     };
-    
+    /** This funktion returns the last written Waterheight at the Position (x,y)
+     * 
+     *  @param x Requested x Position
+     *  @param y Requested y Position
+     *  @return Waterheight ot Requested Position
+     */
     float getWaterHeight(float x, float y) { 
         int err_val;
         size_t index[3];
@@ -143,7 +148,12 @@ public:
         return result;
     };
     
-    
+    /** This funktion returns the last written Bathymetry at the Position (x,y) at time = Zero
+     * 
+     *  @param x Requested x Position
+     *  @param y Requested y Position
+     *  @return Bathymetry ot Requested Position
+     */
     float getBathymetry(float x, float y) {
         int err_val;
         size_t index[3];
@@ -159,7 +169,12 @@ public:
         return result;
     };
     
-    
+    /** This funktion returns the last written Horizontal-Velocity at the Position (x,y)
+     * 
+     *  @param x Requested x Position
+     *  @param y Requested y Position
+     *  @return Velocity ot Requested Position
+     */
     float getVeloc_u(float x, float y) {
         int err_val;
         size_t index[3];
@@ -181,7 +196,12 @@ public:
         return hu/(h*h);
     };
     
-    
+     /** This funktion returns the last written Vertical-Velocity at the Position (x,y)
+     * 
+     *  @param x Requested x Position
+     *  @param y Requested y Position
+     *  @return Velocity ot Requested Position
+     */
     float getVeloc_v(float x, float y) {
         int err_val;
         size_t index[3];
@@ -202,7 +222,10 @@ public:
         
         return hv/(h*h);
     };
-    
+    /** This function Returns the Time of the Checkpoint
+     *
+     * @return Checkpoint-Time
+     */
     float getTime() {
         int err_val;
         float time;
@@ -214,7 +237,13 @@ public:
         return time;
     }
     
-    // get boundary position  
+    /**
+     * getBoundaryPos will return the position of the boundary #i_edge
+     * on the axis orthogonal to the boundary
+     * 
+     * @param i_edge the boundary we want to get the position of
+     * @return the position of the boundary on the axis orthogonal to it
+     */  
     float getBoundaryPos(BoundaryEdge i_edge) {
         int err_val;
         float ret;
@@ -244,7 +273,10 @@ public:
         return 0;
         
     };
-    
+    /** This funktion returns the planed Simulationtime
+     *
+     * @return Planed Simulation Time 
+     */
     float endSimulation() {
         int err_val;
         float ret;
@@ -256,7 +288,23 @@ public:
         return ret;    
     };
     
-    //TODO
+    /** This function returns the BoundaryType for the requested edge from the CP-File
+     * Translationtabel:
+     * ----------------
+     * |OUTFLOW  | 0  | 
+     * |WALL     | 1  |
+     * |INFLOW   | 2  |
+     * |CONNECT  | 3  |
+     * |PASSIVE  | 4  |
+     * |OTHERS   | 5  |
+     * ----------------
+     *
+     * Order of Edges in CP-File:
+     * {BND_TOP,BND_BOTTOM,BND_LEFT,BND_RIGHT}
+     *
+     * @param edge requested boundary Edge
+     * @retun BoundaryType of edge
+     */
     BoundaryType getBoundaryType(BoundaryEdge edge) { 
             size_t boundtype;            
             if(edge == BND_RIGHT)
