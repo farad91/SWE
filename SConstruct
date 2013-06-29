@@ -378,6 +378,10 @@ program_name += '_'+env['parallelization']
 # solver
 program_name += '_'+env['solver']
 
+# dynamic
+if env['dynamic_Disp'] == True:
+  program_name += '_DynamicDispl'
+
 # build directory
 build_dir = env['buildDir']+'/build_'+program_name
 
