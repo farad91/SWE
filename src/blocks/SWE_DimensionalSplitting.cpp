@@ -158,10 +158,11 @@ void SWE_DimensionalSplitting::computeNumericalFluxes()
  *@return maximum Edge speed 
  */
 float SWE_DimensionalSplitting::computeHorizontalFluxes(){
-    float edgeSpeed = 0.f;
     float maxEdgeSpeed = 0.f;
     #pragma omp parallel for
     for(int y=0; y<ny+2; y++){
+        float edgeSpeed = 0.f;
+        float maxInnerEdgeSpeed = 0.f;
         for(int x=0; x<nx+1; x++){
             fWaveSolver.computeNetUpdates(h[x][y],  h[x+1][y],
                                           hu[x][y], hu[x+1][y],
@@ -169,8 +170,9 @@ float SWE_DimensionalSplitting::computeHorizontalFluxes(){
                                           hNetUpdatesLeft[x][y],  hNetUpdatesRight[x][y],
                                           huNetUpdatesLeft[x][y], huNetUpdatesRight[x][y],
                                           edgeSpeed);
-            maxEdgeSpeed = std::max(edgeSpeed, maxEdgeSpeed);
+            maxInnerEdgeSpeed = std::max(edgeSpeed, maxInnerEdgeSpeed);
         }
+        maxEdgeSpeed = std::max(maxInnerEdgeSpeed, maxEdgeSpeed);
     }
     return maxEdgeSpeed;
 }
@@ -183,10 +185,11 @@ float SWE_DimensionalSplitting::computeHorizontalFluxes(){
  * @return maximum Edge speed  
  */
 float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
-    float edgeSpeed = 0.f;
     float maxEdgeSpeed = 0.f;
     #pragma omp parallel for
     for(int x=1; x<nx+1; x++){
+        float edgeSpeed = 0.f;
+        float maxInnerEdgeSpeed = 0.f;
         for(int y=0; y<ny+1; y++){
             fWaveSolver.computeNetUpdates(h[x][y] -(dt/dx * (hNetUpdatesRight[x-1][y] + hNetUpdatesLeft[x][y])),
                                           h[x][y+1] -(dt/dx*(hNetUpdatesRight[x-1][y+1] + hNetUpdatesLeft[x][y+1])),
@@ -195,8 +198,9 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
                                           hNetUpdatesBelow[x][y],  hNetUpdatesAbove[x][y],
                                           hvNetUpdatesBelow[x][y], hvNetUpdatesAbove[x][y],
                                           edgeSpeed);
-            maxEdgeSpeed = std::max(edgeSpeed, maxEdgeSpeed);
+            maxInnerEdgeSpeed = std::max(edgeSpeed, maxInnerEdgeSpeed);
         }
+        maxEdgeSpeed = std::max(maxInnerEdgeSpeed, maxEdgeSpeed);
     }
     return maxEdgeSpeed;
 }
@@ -209,9 +213,10 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
  */
 float SWE_DimensionalSplitting::computeVerticalFluxes(){
     float edgeSpeed = 0.f;
-    float maxEdgeSpeed = 0.f;
     #pragma omp parallel for
     for(int x=1; x<nx+1; x++){
+        float maxEdgeSpeed = 0.f;
+        float maxInnerEdgeSpeed = 0.f;
         for(int y=0; y<ny+1; y++){
             fWaveSolver.computeNetUpdates(h[x][y], h[x][y+1],
                                           hv[x][y], hv[x][y+1],
@@ -219,8 +224,9 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(){
                                           hNetUpdatesBelow[x][y],  hNetUpdatesAbove[x][y],
                                           hvNetUpdatesBelow[x][y], hvNetUpdatesAbove[x][y],
                                           edgeSpeed);
-            maxEdgeSpeed = std::max(edgeSpeed, maxEdgeSpeed);
+            maxInnerEdgeSpeed = std::max(edgeSpeed, maxInnerEdgeSpeed);
         }
+        maxEdgeSpeed = std::max(maxInnerEdgeSpeed, maxEdgeSpeed);
     }
     return maxEdgeSpeed;
 }
