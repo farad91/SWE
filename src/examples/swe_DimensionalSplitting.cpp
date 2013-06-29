@@ -3,7 +3,8 @@
  * This file is part of SWE.
  *
  * @author Alexander Breuer (breuera AT in.tum.de, http://www5.in.tum.de/wiki/index.php/Dipl.-Math._Alexander_Breuer)
- *         Michael Bader (bader AT in.tum.de, http://www5.in.tum.de/wiki/index.php/Univ.-Prof._Dr._Michael_Bader)
+ * @author Michael Bader (bader AT in.tum.de, http://www5.in.tum.de/wiki/index.php/Univ.-Prof._Dr._Michael_Bader)
+ * @author Thomas Blocher (blocher AT in.tum.de) 
  *
  * @section LICENSE
  *
@@ -251,6 +252,11 @@ else
                             l_wavePropgationBlock.getDischarge_hv(),
                             (float) 0.);
   #endif
+  if(!checkpoint)
+    l_writer.writeBoundary( l_scenario->getBoundaryType(BND_TOP),
+                            l_scenario->getBoundaryType(BND_BOTTOM),
+                            l_scenario->getBoundaryType(BND_LEFT),
+                            l_scenario->getBoundaryType(BND_RIGHT));
   
 
   /**
