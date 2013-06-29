@@ -22,7 +22,6 @@
  *
  * @section DESCRIPTION
  *
- * TODO
  */
 
 #include "SWE_NetCDFScenario.hh"
@@ -77,7 +76,13 @@ public:
             return height;
     };
     
-    
+    /** This funktion returns the Bathymetry at the Position (x,y) and time (time) 
+     * 
+     *  @param x Requested x Position
+     *  @param y Requested y Position
+     *  @param time Requested Time
+     *  @return Bathymetry ot Requested Position
+     */
     float getDynamicBathymetry(float x, float y, float time) {
         int   err_val;
         float displacement = 0.f;
@@ -123,6 +128,8 @@ public:
         return result;
     };
     
+    /**This Function returns Duration of Earthquake
+     */
     float getEruptionDuration() {
     #ifdef DYNAMIC
     if(DynamicDispl)
@@ -133,7 +140,8 @@ public:
         return 0.f;
     #endif
     };
-    
+    /** This function returns Resolution of Displacement Data over Time
+     */
     float getEruptionResolution() {
     if(DynamicDispl)
         return time_delta_displ; 
@@ -141,7 +149,7 @@ public:
         return 2.f;
     };
     
-    /** This funktion returns the Bathymetry at the Position (x,y)
+    /** This funktion returns the Bathymetry at the Position (x,y) at time = Zero
      * 
      *  @param x Requested x Position
      *  @param y Requested y Position
@@ -283,7 +291,10 @@ public:
  
         return result;
     };
-    /**
+    /** This Funktion returns the BoundaryType at edge (edge)
+     *
+     * @param edge Requested BoundaryEdge
+     * @return BoundaryType of the edge
      */
     BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW; };
 
@@ -470,6 +481,7 @@ public:
             }
         }
         #ifndef DYNAMIC
+        // loading last timestep into Ram
         if(DynamicDispl){
             Displacement = new Float2D((int) y_size_displ, (int) x_size_displ);
             size_t start[] = {time_size_displ-1,0,0};
@@ -620,7 +632,7 @@ private:
         result = Bath[y_pos][x_pos];
         return result;
     };
-    
+    /**This funktion Prints additional Debug info  */
     void printDebugInfo() {
         cerr << "x_start_bathy: " << x_start_bathy << endl;
         cerr << "y_start_bathy: " << x_start_bathy << endl;
