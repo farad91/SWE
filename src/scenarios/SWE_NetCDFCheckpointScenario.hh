@@ -254,10 +254,31 @@ public:
             cerr << nc_strerror(err_val) << endl;
         
         return ret;    
-    }
+    };
     
     //TODO
-    BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW; };
+    BoundaryType getBoundaryType(BoundaryEdge edge) { 
+            size_t boundtype;            
+            if(edge == BND_RIGHT)
+                boundtype = 3;
+            if(edge == BND_LEFT)
+                boundtype = 2;  
+            if(edge == BND_BOTTOM)
+                boundtype = 1; 
+            if(edge == BND_TOP)
+                boundtype = 0;
+            int output;
+            nc_get_var1_int(cp_id, Bound_id, &boundtype, &output);
+            if (output == 1)
+                return WALL;
+            if (output == 2)
+                return INFLOW;
+            if (output == 3)
+                return CONNECT;
+            if (output == 4)
+                return PASSIVE;
+            return OUTFLOW;
+    };
     
     
 private:
