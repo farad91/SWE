@@ -137,6 +137,9 @@ else
 
   
 #ifdef DEBUG
+if(checkpoint)
+  cerr << "Loading Checkpoint..." << endl;
+else  
   cerr << "Creating scenario..." << endl;
 #endif
  
