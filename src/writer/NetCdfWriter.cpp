@@ -66,7 +66,7 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
     //putting informations for Global down
     Skal = coarse;   
     EndTime = ETime;
-
+    //Check if there is a File that should be continued
     if(newfile){
 	    int status;
 
@@ -122,7 +122,7 @@ io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
 	        nc_def_var(dataFile, "b",  NC_FLOAT, 2, &dims[1], &bVar);
 	    //variables for check file
         nc_def_var(checkFile, "EndTime", NC_FLOAT,0,dims, &EndTimeVar);
-        nc_def_var(checkFile, "BoundType", NC_FLOAT,1,&l_boundDim, &BoundVar);
+        nc_def_var(checkFile, "BoundType", NC_INT,1,&l_boundDim, &BoundVar);
         
         // Setting Checkfile values and load them to Hard Disk
         nc_put_var_float(checkFile,EndTimeVar,&ETime);
@@ -280,9 +280,23 @@ void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
     }
   }
 //TODO void writeBoundary conditiones ( type cast and transltion tabel to int or som tihng like that
-void io::NetCdfWriter::writeBoundary(char* up, char* bottom, char* left, char* right) {
-    
-		//nc_put_var_string(checkFile,BoundVar,up); //write col
+void io::NetCdfWriter::writeBoundary(BoundaryType up, BoundaryType bottom, BoundaryType left, BoundaryType right) {
+        BoundaryType Bound[] = {up,bottom,left,right};
+        for(int i = 0; i<4;i++){
+            int input = 5;         
+            if (Bound[i] == OUTFLOW)
+                input = 0;
+            if (Bound[i] == WALL)
+                input = 1;
+            if (Bound[i] == INFLOW)
+                input =2;
+            if (Bound[i] = CONNECT)
+                input = 3;
+            if (Bound[i] == PASSIVE)
+                input = 4;
+            size_t pos = i;
+		    nc_put_var1_int(checkFile,BoundVar,&pos,&input);
+        }
   
 }
 /**

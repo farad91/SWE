@@ -46,6 +46,7 @@
 #endif
 
 #include "writer/Writer.hh"
+#include "scenarios/SWE_Scenario.hh"
 
 namespace io {
   class NetCdfWriter;
@@ -95,7 +96,7 @@ private:
                         const Float2D &i_hv,
                         const Float2D &i_b,
                         float i_time);
-    void writeBoundary(char* up, char* bottom, char* left, char* right);
+    void writeBoundary(BoundaryType up, BoundaryType bottom, BoundaryType left, BoundaryType right);
 
   private:
     /**
