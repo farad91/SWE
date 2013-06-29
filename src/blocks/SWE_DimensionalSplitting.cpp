@@ -212,10 +212,10 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
  * @return maximum Edge speed  
  */
 float SWE_DimensionalSplitting::computeVerticalFluxes(){
-    float edgeSpeed = 0.f;
+    float maxEdgeSpeed = 0.f;
     #pragma omp parallel for
     for(int x=1; x<nx+1; x++){
-        float maxEdgeSpeed = 0.f;
+        float edgeSpeed = 0.f;
         float maxInnerEdgeSpeed = 0.f;
         for(int y=0; y<ny+1; y++){
             fWaveSolver.computeNetUpdates(h[x][y], h[x][y+1],
