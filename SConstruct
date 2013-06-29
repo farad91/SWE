@@ -227,6 +227,10 @@ if env['compiler'] == 'intel' and env['platform'] == 'mic':
 if env['parallelization'] == 'openmp' and env['compiler'] == 'gnu':
     env.Append(CCFLAGS=['-fopenmp'])
     env.Append(LINKFLAGS=['-fopenmp'])
+
+if env['parallelization'] == 'openmp' and env['compiler'] == 'intel':
+    env.Append(CCFLAGS=['-openmp'])
+    env.Append(LINKFLAGS=['-openmp'])
   
 # Compiler
 if env['compiler'] == 'intel':
