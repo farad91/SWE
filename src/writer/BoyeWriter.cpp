@@ -2,7 +2,7 @@
  * @file
  * This file is part of SWE.
  *
- * @author Thomas Blocher
+ * @author Thomas Blocher (blocher@in.tum.de)
  *
  * @section LICENSE
  *
@@ -36,7 +36,7 @@
  * Any existing file will be replaced.
  *
  * @param i_baseName base name of the netCDF-file to which the data will be written to.
- * @param NumberOfBoyes contains the Number of Boyes Written in this Filw
+ * @param NumberOfBoyes contains the Number of Boyes Written in this File (if it is less 1 it's interpreted as Checkpoint to coninue)
  */
 io::BoyeWriter::BoyeWriter( const std::string &i_baseName,
                                 int NumberOfBoyes)
@@ -97,11 +97,10 @@ io::BoyeWriter::~BoyeWriter() {
 }
 
 /**
- * Initialize A Boye give x and y position 
+ * Initialize a Boye at given x and y position 
  *
  * @param X-Position of Boye
  * @param Y-position of boye
- * @param numberOfBoye
  */
 void io::BoyeWriter::initBoye( float l_x, float l_y, SWE_DimensionalSplitting &block) {
 	//Define Positon of Boye #number 
@@ -127,10 +126,10 @@ void io::BoyeWriter::initBoye( float l_x, float l_y, SWE_DimensionalSplitting &b
     }
 }
 /**
- * Write BoyeData 
+ * Write BoyeData write data of all initialized Boyes at given Time time 
  * @param Time of Data
- * @param Value of WaterHigh
- * @param Number of the Boye being writtend
+ * @param Reference to Array containing Waterheight
+ * @param Reference to Array containing Bathymetry
  */
 void io::BoyeWriter::writeBoye( float time, const Float2D &h, const Float2D &b) {
 	//Put waterhigh for Boye

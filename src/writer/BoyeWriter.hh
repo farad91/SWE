@@ -2,8 +2,7 @@
  * @file
  * This file is part of SWE.
  *
- * @author Alexander Breuer (breuera AT in.tum.de, http://www5.in.tum.de/wiki/index.php/Dipl.-Math._Alexander_Breuer)
- * @author Sebastian Rettenberger (rettenbs AT in.tum.de, http://www5.in.tum.de/wiki/index.php/Sebastian_Rettenberger,_M.Sc.)
+ * @author Thomas Blocher (blocher@in.tum.de)
  *
  * @section LICENSE
  *
@@ -51,9 +50,12 @@ private:
 
     /** Variable ids */
     int yVar, xVar, hVar, timeVar;
+    /** Counter variables*/
     size_t initBoyes, MaxBoyes;
-    size_t timeStep; 
+    size_t timeStep;
+    /** Helper Arrays*/
     int *y_int, *x_int;
+
   public:
     BoyeWriter(const std::string &i_fileName, int NumberOfBoyes);
     virtual ~BoyeWriter();
@@ -61,7 +63,7 @@ private:
     // Init a boye
     void initBoye( float x, float y, SWE_DimensionalSplitting &block);
     
-    //write data vor boye
+    //write data for boye
     void writeBoye( float time,const Float2D &h, const Float2D &b);
 };
-#endif /* NETCDFWRITER_HH_ */
+#endif /* BOYEWriter_HH_ */
