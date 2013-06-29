@@ -310,7 +310,7 @@ void io::NetCdfWriter::writeBoundary(BoundaryType top, BoundaryType bottom, Boun
                 input = 1;
             if (Bound[i] == INFLOW)
                 input =2;
-            if (Bound[i] = CONNECT)
+            if (Bound[i] == CONNECT)
                 input = 3;
             if (Bound[i] == PASSIVE)
                 input = 4;
