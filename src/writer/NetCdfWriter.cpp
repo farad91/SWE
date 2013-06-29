@@ -279,9 +279,29 @@ void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
         }
     }
   }
-//TODO void writeBoundary conditiones ( type cast and transltion tabel to int or som tihng like that
-void io::NetCdfWriter::writeBoundary(BoundaryType up, BoundaryType bottom, BoundaryType left, BoundaryType right) {
-        BoundaryType Bound[] = {up,bottom,left,right};
+/**
+ * Writes the BoudaryTypes for each edge to the Checkpointfile
+ *
+ * Translationtabel:
+ * ----------------
+ * |OUTFLOW  | 0  | 
+ * |WALL     | 1  |
+ * |INFLOW   | 2  |
+ * |CONNECT  | 3  |
+ * |PASSIVE  | 4  |
+ * |OTHERS   | 5  |
+ * ----------------
+ *
+ * Order of Edges in CP-File:
+ * {BND_TOP,BND_BOTTOM,BND_LEFT,BND_RIGHT}
+ *
+ * @param top BoundaryType at edge TOP
+ * @param bottom BoundaryType at edge BOTTOM
+ * @param left BoundaryType at edge LEFT
+ * @param right BoundaryType at edge RIGHT
+ */
+void io::NetCdfWriter::writeBoundary(BoundaryType top, BoundaryType bottom, BoundaryType left, BoundaryType right) {
+        BoundaryType Bound[] = {top,bottom,left,right};
         for(int i = 0; i<4;i++){
             int input = 5;         
             if (Bound[i] == OUTFLOW)

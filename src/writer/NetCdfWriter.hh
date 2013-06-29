@@ -4,6 +4,7 @@
  *
  * @author Alexander Breuer (breuera AT in.tum.de, http://www5.in.tum.de/wiki/index.php/Dipl.-Math._Alexander_Breuer)
  * @author Sebastian Rettenberger (rettenbs AT in.tum.de, http://www5.in.tum.de/wiki/index.php/Sebastian_Rettenberger,_M.Sc.)
+ * @author Thomas Blocher (blocher AT in.tum.de) 
  *
  * @section LICENSE
  *
@@ -96,7 +97,8 @@ private:
                         const Float2D &i_hv,
                         const Float2D &i_b,
                         float i_time);
-    void writeBoundary(BoundaryType up, BoundaryType bottom, BoundaryType left, BoundaryType right);
+    //Write BoundaryTypes to CP-File
+    void writeBoundary(BoundaryType top, BoundaryType bottom, BoundaryType left, BoundaryType right);
 
   private:
     /**
