@@ -221,7 +221,7 @@ else
                              l_boundarySize,
                              l_nX, l_nY,
                              l_dX, l_dY,
-                             l_endSimulation, 1,
+                             l_endSimulation, 8,
                              !checkpoint,true,
                              l_originX, l_originY,
                              0
