@@ -65,7 +65,7 @@ public:
      */
     float getWaterHeight(float x, float y) {
         float height = (-1) * getOriginalBathymetry(x,y);
-        
+ 
         // apply the minimum height
         if(height < bath_min_zero_offset)
             if(height <= 0.f)
@@ -166,18 +166,19 @@ public:
         #else
 
         size_t index[2];        
-        
+        bool Displ;
         // try to get the indices for the displacement data
-        if( !toGridCoordinates(DISPLACEMENT, x ,y, &index[1], &index[0])) {
-            // we are outside the area where the displacement is relevant
-            result = getOriginalBathymetry(x,y);
-        }
-        else {
+        Displ = toGridCoordinates(DISPLACEMENT, x ,y, &index[1], &index[0]);
+        // we are outside the area where the displacement is relevant
+        result = getOriginalBathymetry(x,y);
+        if(Displ) {
+            if(result < 0){ //otherwise simulation will crash because dry arry will get wet without water
             // displacement data is available for this position
             Float2D &Disp = *Displacement;
             int x_pos = index[1];
             int y_pos = index[0]; 
-            result = getOriginalBathymetry(x,y) + Disp[y_pos][x_pos];
+            result += Disp[y_pos][x_pos];
+            }
         }
         #endif
         // apply the minimum elevation or depth
