@@ -41,35 +41,55 @@
 io::BoyeWriter::BoyeWriter( const std::string &i_baseName,
                                 int NumberOfBoyes)
 {
-    int status;
-    timeStep = 0;
-    initBoyes = 0;
-    x_int = new int[NumberOfBoyes];
-    y_int = new int[NumberOfBoyes];
-    //create a netCDF-file, an existing file will be replaced
-    status = nc_create((i_baseName+"_Boye.nc").c_str(), NC_NETCDF4, &dataFile);
+    if( NumberOfBoyes > 0){
+        int status;
+        timeStep = 0;
+        initBoyes = 0;
+        MaxBoyes = NumberOfBoyes;
+        x_int = new int[NumberOfBoyes];
+        y_int = new int[NumberOfBoyes];
+        //create a netCDF-file, an existing file will be replaced
+        status = nc_create((i_baseName+"_Boye.nc").c_str(), NC_NETCDF4, &dataFile);
 
-  //check if the netCDF-file creation constructor succeeded.
-    if (status != NC_NOERR) {
-	    assert(false);
-	    return;
+        //check if the netCDF-file creation constructor succeeded.
+        if (status != NC_NOERR) {
+	        assert(false);
+	        return;
+        }
+
+        //dimensions
+        int l_timeDim, l_boyeDim;
+        nc_def_dim(dataFile, "time", NC_UNLIMITED, &l_timeDim);
+        nc_def_dim(dataFile, "Boye",  NumberOfBoyes , &l_boyeDim);
+
+
+        nc_def_var(dataFile, "time", NC_FLOAT, 1, &l_timeDim, &timeVar);
+
+        //variables, fastest changing index is on the right (C syntax), will be mirrored by the library
+        int dims[] = {l_timeDim, l_boyeDim};
+        nc_def_var(dataFile, "Data",  NC_FLOAT, 2, dims, &hVar);
+        
+        nc_def_var(dataFile, "x", NC_FLOAT, 1, &dims[1], &xVar);
+        nc_def_var(dataFile, "y",  NC_FLOAT, 1, &dims[1], &yVar);
     }
-
-    //dimensions
-    int l_timeDim, l_boyeDim;
-    nc_def_dim(dataFile, "time", NC_UNLIMITED, &l_timeDim);
-    nc_def_dim(dataFile, "Boye",  NumberOfBoyes , &l_boyeDim);
-
-
-    nc_def_var(dataFile, "time", NC_FLOAT, 1, &l_timeDim, &timeVar);
-
-    //variables, fastest changing index is on the right (C syntax), will be mirrored by the library
-    int dims[] = {l_timeDim, l_boyeDim};
-    nc_def_var(dataFile, "Data",  NC_FLOAT, 2, dims, &hVar);
-    
-    nc_def_var(dataFile, "x", NC_FLOAT, 1, &dims[1], &xVar);
-    nc_def_var(dataFile, "y",  NC_FLOAT, 1, &dims[1], &yVar);
-
+    else{
+        nc_open((i_baseName+"_Boye.nc").c_str(), NC_WRITE, &dataFile);
+        
+        //get dim id
+        int l_timeDim,l_boyeDim;
+        nc_inq_dimid(dataFile, "time", &l_timeDim);
+        nc_inq_dimlen(dataFile, l_timeDim, &timeStep);
+        nc_inq_dimid(dataFile, "Boye", &l_boyeDim);
+        nc_inq_dimlen(dataFile, l_boyeDim, &initBoyes);
+        // get the variables IDs 
+        nc_inq_varid(dataFile, "Data",  &hVar);
+        nc_inq_varid(dataFile, "x", &xVar);
+        nc_inq_varid(dataFile, "y",  &yVar);
+        nc_inq_varid(dataFile, "time", &timeVar);
+        x_int = new int[initBoyes];
+        y_int = new int[initBoyes];
+        MaxBoyes = initBoyes;
+    }
 }
 io::BoyeWriter::~BoyeWriter() {
 	
@@ -83,17 +103,28 @@ io::BoyeWriter::~BoyeWriter() {
  * @param Y-position of boye
  * @param numberOfBoye
  */
-void io::BoyeWriter::initBoye( float l_x, float l_y, SWE_DimensionalSplitting &block, int number) {
+void io::BoyeWriter::initBoye( float l_x, float l_y, SWE_DimensionalSplitting &block) {
 	//Define Positon of Boye #number 
-	size_t pos = initBoyes;
-	nc_put_var1_float(dataFile, xVar, &pos, &l_x);
-	nc_put_var1_float(dataFile, yVar, &pos, &l_y);    
-    x_int[initBoyes] = block.getXpos(l_x);
-    y_int[initBoyes] = block.getYpos(l_y);
-    assert(x_int[number]>=0);
-    assert(y_int[number]>=0);
-	nc_sync(dataFile);
-    initBoyes++;
+    if(initBoyes < MaxBoyes){
+	    size_t pos = initBoyes;
+	    nc_put_var1_float(dataFile, xVar, &pos, &l_x);
+	    nc_put_var1_float(dataFile, yVar, &pos, &l_y);    
+        x_int[initBoyes] = block.getXpos(l_x);
+        y_int[initBoyes] = block.getYpos(l_y);
+	    nc_sync(dataFile);
+        initBoyes++;
+    }
+    else{
+        float x;
+        float y;
+        for(int i = 0; i < MaxBoyes; i++){
+            size_t pos = i;
+	        nc_get_var1_float(dataFile, xVar, &pos, &x);
+	        nc_get_var1_float(dataFile, yVar, &pos, &y);
+            x_int[i] = block.getXpos(x);
+            y_int[i] = block.getYpos(y);
+        }
+    }
 }
 /**
  * Write BoyeData 

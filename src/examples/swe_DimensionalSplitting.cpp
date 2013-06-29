@@ -195,14 +195,21 @@ else
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
 
   //Prepaire Boyes
-  io::BoyeWriter l_boyeWriter( l_fileName,5);
-  l_boyeWriter.initBoye(0,0,l_wavePropgationBlock,0);
-  l_boyeWriter.initBoye(10000,10000,l_wavePropgationBlock,1);
-  l_boyeWriter.initBoye(-10000,-10000,l_wavePropgationBlock,1);
-  l_boyeWriter.initBoye(10000,0,l_wavePropgationBlock,1);
-  l_boyeWriter.initBoye(-5000,0,l_wavePropgationBlock,1);
-  l_boyeWriter.writeBoye(0,l_wavePropgationBlock.getWaterHeight(),l_wavePropgationBlock.getBathymetry());
-  
+  int NumberOfBoyes = 5;
+  if(checkpoint)
+    NumberOfBoyes = 0;
+  io::BoyeWriter l_boyeWriter( l_fileName,NumberOfBoyes);
+  if(!checkpoint){
+    l_boyeWriter.initBoye(0,0,l_wavePropgationBlock);
+    l_boyeWriter.initBoye(10000,10000,l_wavePropgationBlock);
+    l_boyeWriter.initBoye(-10000,-10000,l_wavePropgationBlock);
+    l_boyeWriter.initBoye(10000,0,l_wavePropgationBlock);
+    l_boyeWriter.initBoye(-5000,0,l_wavePropgationBlock);
+    l_boyeWriter.writeBoye(0,l_wavePropgationBlock.getWaterHeight(),l_wavePropgationBlock.getBathymetry());
+  }
+  else{
+    l_boyeWriter.initBoye(0,0,l_wavePropgationBlock);
+  }
   #ifdef DYNAMIC
   // construct a NetCdfWriter
   io::NetCdfWriter l_writer( l_fileName,

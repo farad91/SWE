@@ -50,7 +50,8 @@ private:
     int dataFile;
 
     /** Variable ids */
-    int yVar, xVar, hVar, timeVar, initBoyes;
+    int yVar, xVar, hVar, timeVar;
+    size_t initBoyes, MaxBoyes;
     size_t timeStep; 
     int *y_int, *x_int;
   public:
@@ -58,7 +59,7 @@ private:
     virtual ~BoyeWriter();
 
     // Init a boye
-    void initBoye( float x, float y, SWE_DimensionalSplitting &block, int number);
+    void initBoye( float x, float y, SWE_DimensionalSplitting &block);
     
     //write data vor boye
     void writeBoye( float time,const Float2D &h, const Float2D &b);
