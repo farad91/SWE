@@ -63,12 +63,12 @@ int main( int argc, char** argv ) {
 
 // check if the necessary command line input parameters are given 
 #ifdef TSUNAMINC
-  if(argc < 7 || argc > 9) {
+  if(argc < 7 || ( argc < 9 && (0!=(argc%2)))) {
     std::cout << "Aborting ... please provide proper input parameters." << std::endl
               << "Example: ./SWE_parallel 200 300 /work/openmp_out bat.nc dis.nc 20" << std::endl
               << "\tfor a single block of size 200 * 300 and simulation time 20sec" << std::endl
-              << "Custom number of checkpoints (in this case 50):" << std::endl
-              << "Example: ./SWE_parallel 200 300 /work/openmp_out bat.nc dis.nc 20 50" << std::endl;
+              << "Custom number of checkpoints (in this case 50) Number of checkponits during Earthqake, Coarse od outputfile and Coordinates for boyes(xcord,ycoord)*:" << std::endl
+              << "Example: ./SWE_parallel 200 300 /work/openmp_out bat.nc dis.nc #time #CP_after #CP_Start #Coarse #boye_1-x #boye_1-y" << std::endl;
     return 1;
   }
 #else
@@ -121,6 +121,19 @@ int main( int argc, char** argv ) {
 #else
   l_numberOfStartingCPs = 0;
 #endif
+  //set cooarse
+  int coarse;
+  if(argc >= 10)
+    coarse = atoi(argv[9]);
+  else
+    coarse = 1;
+  //set boyes
+  int NumberOfBoyes = 0;
+  bool boyes = false;
+  if(argc >= 12){
+    boyes =true;
+    NumberOfBoyes = ((argc-10)/2);
+  }
 
 //Generate Filename and Check if there is an Loadable Checkpoint
 std::string l_fileName = generateBaseFileName(l_baseName,0,0);
@@ -199,16 +212,14 @@ else
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
 
   //Prepaire Boyes
-  int NumberOfBoyes = 5;
   if(checkpoint)
     NumberOfBoyes = 0;
   io::BoyeWriter l_boyeWriter( l_fileName,NumberOfBoyes);
-  if(!checkpoint){
-    l_boyeWriter.initBoye(0,0,l_wavePropgationBlock);
-    l_boyeWriter.initBoye(10000,10000,l_wavePropgationBlock);
-    l_boyeWriter.initBoye(-10000,-10000,l_wavePropgationBlock);
-    l_boyeWriter.initBoye(10000,0,l_wavePropgationBlock);
-    l_boyeWriter.initBoye(-5000,0,l_wavePropgationBlock);
+  if(!checkpoint && boyes){
+    // get boyes Data from input
+    for(int i = 0; i < NumberOfBoyes; i++){
+        l_boyeWriter.initBoye(atoi(argv[(10)+(2*i)]),atoi(argv[(11)+(2*i)]),l_wavePropgationBlock);
+    }
     l_boyeWriter.writeBoye(0,l_wavePropgationBlock.getWaterHeight(),l_wavePropgationBlock.getBathymetry());
   }
   else{
@@ -221,7 +232,7 @@ else
                              l_boundarySize,
                              l_nX, l_nY,
                              l_dX, l_dY,
-                             l_endSimulation, 8,
+                             l_endSimulation, coarse,
                              !checkpoint,true,
                              l_originX, l_originY,
                              0
@@ -244,7 +255,7 @@ else
                              l_boundarySize,
                              l_nX, l_nY,
                              l_dX, l_dY,
-                             l_endSimulation, 2,
+                             l_endSimulation, coarse,
                              !checkpoint,false,
                              l_originX, l_originY,
                              0
