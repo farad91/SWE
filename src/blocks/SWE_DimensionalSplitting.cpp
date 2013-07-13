@@ -159,7 +159,7 @@ void SWE_DimensionalSplitting::computeNumericalFluxes()
  */
 float SWE_DimensionalSplitting::computeHorizontalFluxes(){
     float maxEdgeSpeed = 0.f;
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic,16)
     for(int y=0; y<ny+2; y++){
         float edgeSpeed = 0.f;
         float maxInnerEdgeSpeed = 0.f;
@@ -190,7 +190,7 @@ float SWE_DimensionalSplitting::computeHorizontalFluxes(){
  */
 float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
     float maxEdgeSpeed = 0.f;
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic,16)
     for(int x=1; x<nx+1; x++){
         float edgeSpeed = 0.f;
         float maxInnerEdgeSpeed = 0.f;
@@ -221,7 +221,7 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
  */
 float SWE_DimensionalSplitting::computeVerticalFluxes(){
     float maxEdgeSpeed = 0.f;
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic,16)
     for(int x=1; x<nx+1; x++){
         float edgeSpeed = 0.f;
         float maxInnerEdgeSpeed = 0.f;
@@ -260,7 +260,7 @@ void SWE_DimensionalSplitting::updateUnknowns(float dt)
  * @param dt MaxTimeStep 
  */
 void SWE_DimensionalSplitting::updateHorizontal(float dt){
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic,16)
     for(int y = 0; y<ny+2; y++){
         for(int x = 1; x<nx+1; x++){
             h[x][y] -= dt/dx * (hNetUpdatesRight[x-1][y] + hNetUpdatesLeft[x][y]);
@@ -274,7 +274,7 @@ void SWE_DimensionalSplitting::updateHorizontal(float dt){
  * @param dt MaxTimeStep 
  */
 void SWE_DimensionalSplitting::updateVertical(float dt){
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic,16)
     for(int x = 1; x<nx+1; x++){
         for(int y = 1; y<ny+1; y++){
             h[x][y] -= dt/dy * (hNetUpdatesAbove[x][y-1] + hNetUpdatesBelow[x][y]);
