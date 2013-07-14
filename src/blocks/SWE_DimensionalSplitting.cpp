@@ -158,7 +158,7 @@ void SWE_DimensionalSplitting::computeNumericalFluxes()
  *@return maximum Edge speed 
  */
 float SWE_DimensionalSplitting::computeHorizontalFluxes(){
-    #pragma omp parallel private(u, i,edgeSpeed,maxInnerEdheSpeed) shared(maxEdgeSpeed)
+    #pragma omp parallel
     float maxEdgeSpeed = 0.f;
     float edgeSpeed = 0.f;
     float maxInnerEdgeSpeed = 0.f;
@@ -221,7 +221,7 @@ float SWE_DimensionalSplitting::computeVerticalFluxes(float dt){
  * @return maximum Edge speed  
  */
 float SWE_DimensionalSplitting::computeVerticalFluxes(){
-    #pragma omp parallel private(u, i,edgeSpeed,maxInnerEdheSpeed) shared(maxEdgeSpeed)
+    #pragma omp parallel 
     float maxEdgeSpeed = 0.f;
     float edgeSpeed = 0.f;
     float maxInnerEdgeSpeed = 0.f;
